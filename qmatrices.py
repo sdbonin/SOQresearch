@@ -17,6 +17,8 @@ in Python 3.5
 I'm not actually sure how Python modules work, but it would probably be a good
 idea to format this all as a module so that these functions could be imported
 easily
+
+EDIT:sdbonin - clarified comments, let me know if I'm misunderstanding anything
 """
 
 import numpy as np
@@ -29,55 +31,55 @@ km = np.array([[0,-1j],[-1j,0]])
 
 def vec_mat(v):
     '''
-    Converts a vector representation into a matrix representation
+    Converts a quaternion vector into the 2x2 imaginary matrix representation
     '''
     return v[0]*rm + v[1]*im + v[2]*jm + v[3]*km
 
 def mat_vec(M):
     '''
-    Converts a matrix representation into a vector representation
+    Converts a 2x2 imaginary matrix quaternion into its vector representation
     '''
     return np.array([ M[1,1].real , M[1,1].imag , M[0,1].real , -M[0,1].imag ])
 
 def qvecmult(vec1,vec2):
     '''
-    Multiplies two quaternions represented as 4-vectors via matrix math
+    Multiplies two 4-vector quaternions via matrix math
     '''
     return mat_vec(np.dot(vec_mat(vec1),vec_mat(vec2)))
 
 def qmatcon(M):
     '''
-    conjugates a quaternion matrix via its 4-vector representation
+    conjugates a 2x2 imaginary matrix quaternion
     '''
     return vec_mat(mat_vec(M)*np.array([1,-1,-1,-1]))
 
 def qveccon(vec):
     '''
-    conjugates vectory quaternions
+    conjugates 4-vector quaternion
     '''
     return vec*np.array([1,-1,-1,-1])
 
 def qvecnorm(vec):
     '''
-    normalizes a vector-represented quaternion
+    normalizes a 4-vector quaternion
     '''
     return vec/qvecmult(qveccon(vec),vec)[0]
 
 def qmatnorm(M):
     '''
-    piggy-backs off the previous function to normalize matrices
+    piggy-backs off the previous function to normalize 2x2 imaginary matrices
     '''
     return vec_mat(qvecnorm(mat_vec(M)))
 
 def qvecmag(vec):
     '''
-    returns the magnitude of a quaternion represented as a vector
+    returns the magnitude of a 4-vector quaternion
     '''
     return qvecmult(qveccon(vec),vec)[0]
 
 def qmatmag(M):
     '''
-    piggy-backs off the previous function to give the magnitude of matrix
+    piggy-backs off the previous function to give the magnitude of 2x2 imaginary matrix
     quaternions
     '''
     return vec_mat(qvecmag(mat_vec(M)))
