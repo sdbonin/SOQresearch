@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-This code uses a loop along with our set of coupled differential equations and
-matrix math to create arrays of 4-vector quaternions.
+These functions should be much more efficient than those of the previous
+version, however this code doesn't actually have any of the plotting nor does
+it have a solution to plot. These should be a nice starting point for working
+with quaternions as they simplify common operations including conversion
+between matrix and vector representations.
 
-The old plotting functions need to be updated and incorperated into the end of
-this code or a better visualization solution needs to be found.
+That said, these can almost certainly be optimized a bit if we need to make the
+integration run faster once we get to that point.
 
-I created a section to check conservation of our candidate conserved quantity.
-I didn't bother cutting off the real part, but in testing that part seems to be
-conserved too. I'm a pessimist, so that's probably a glitch.
+To multiply two matrix quaternions together, use np.dot(M1,M2)
+
+This code was written in Python 2.7, however most if not all of it should work
+in Python 3.5
+
+I'm not actually sure how Python modules work, but it would probably be a good
+idea to format this all as a module so that these functions could be imported
+easily
 """
 
 
@@ -146,7 +154,7 @@ def conserved(q1,q2,p1,p2):
 #                     AKA "Let 'er rip"
 #------------------------------------------------------------------------------
 
-while t<1.5:
+while t<6:
     q1a.append(mat_vec(q1))
     q2a.append(mat_vec(q2))
     p1a.append(mat_vec(p1))
@@ -170,4 +178,25 @@ p2a = np.array(p2a)
 time = np.array(time)
 con = np.array(con)
 
-print con # looks pretty conserved to me, even the real part
+#------------------------------------------------------------------------------
+#                       Plotting things
+#                   AKA "Can we see it now?"
+#------------------------------------------------------------------------------
+
+import matplotlib.pyplot as plt
+
+def plot(thing,time):
+    plt.clf()
+    plt.plot(time,thing[:,0],label='Real', color = 'black')
+    plt.plot(time,thing[:,1],label='i', color = 'red')
+    plt.plot(time,thing[:,2],label='j', color = 'green')
+    plt.plot(time,thing[:,3],label='k', color = 'blue')
+    plt.legend(loc='best')
+    plt.grid()
+    plt.show()
+
+plot(con,time)
+plot(q1a,time)
+plot(q2a,time)
+plot(p1a,time)
+plot(p2a,time)
