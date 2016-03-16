@@ -17,13 +17,11 @@ in Python 3.5
 I'm not actually sure how Python modules work, but it would probably be a good
 idea to format this all as a module so that these functions could be imported
 easily
-
-EDIT:sdbonin - clarified comments, let me know if I'm misunderstanding anything
 """
 
 import numpy as np
 
-# a set uf init quaternions and the identity matrix for building general q-matrices
+# a set of init quaternions and the identity matrix for building general q-matrices
 rm = np.identity(2)
 im = np.array([[-1j,0],[0,1j]])
 jm = np.array([[0,1],[-1,0]])
@@ -63,7 +61,7 @@ def qvecnorm(vec):
     '''
     normalizes a 4-vector quaternion
     '''
-    return vec/qvecmult(qveccon(vec),vec)[0]
+    return vec/np.sqrt(qvecmult(qveccon(vec),vec)[0])
 
 def qmatnorm(M):
     '''
@@ -71,15 +69,15 @@ def qmatnorm(M):
     '''
     return vec_mat(qvecnorm(mat_vec(M)))
 
-def qvecmag(vec):
+def qvecmagsqr(vec):
     '''
     returns the magnitude of a 4-vector quaternion
     '''
     return qvecmult(qveccon(vec),vec)[0]
 
-def qmatmag(M):
+def qmatmagsqr(M):
     '''
     piggy-backs off the previous function to give the magnitude of 2x2 imaginary matrix
     quaternions
     '''
-    return vec_mat(qvecmag(mat_vec(M)))
+    return qvecmagsqr(mat_vec(M))
