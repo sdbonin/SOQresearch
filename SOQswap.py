@@ -5,10 +5,6 @@ matrix math to create arrays of 4-vector quaternions.
 
 The old plotting functions need to be updated and incorperated into the end of
 this code or a better visualization solution needs to be found.
-
-I created a section to check conservation of our candidate conserved quantity.
-I didn't bother cutting off the real part, but in testing that part seems to be
-conserved too. I'm a pessimist, so that's probably a glitch.
 """
 
 
