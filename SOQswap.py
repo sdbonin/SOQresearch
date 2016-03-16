@@ -1,22 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-These functions should be much more efficient than those of the previous
-version, however this code doesn't actually have any of the plotting nor does
-it have a solution to plot. These should be a nice starting point for working
-with quaternions as they simplify common operations including conversion
-between matrix and vector representations.
+This code uses a loop along with our set of coupled differential equations and
+matrix math to create arrays of 4-vector quaternions.
 
-That said, these can almost certainly be optimized a bit if we need to make the
-integration run faster once we get to that point.
+The old plotting functions need to be updated and incorperated into the end of
+this code or a better visualization solution needs to be found.
 
-To multiply two matrix quaternions together, use np.dot(M1,M2)
-
-This code was written in Python 2.7, however most if not all of it should work
-in Python 3.5
-
-I'm not actually sure how Python modules work, but it would probably be a good
-idea to format this all as a module so that these functions could be imported
-easily
+I created a section to check conservation of our candidate conserved quantity.
+I didn't bother cutting off the real part, but in testing that part seems to be
+conserved too. I'm a pessimist, so that's probably a glitch.
 """
 
 
