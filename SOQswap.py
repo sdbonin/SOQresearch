@@ -181,17 +181,42 @@ con = np.array(con)
 import matplotlib.pyplot as plt
 
 def plot(thing,time):
-    plt.clf()
+    #plt.clf()
     plt.plot(time,thing[:,0],label='Real', color = 'black')
     plt.plot(time,thing[:,1],label='i', color = 'red')
     plt.plot(time,thing[:,2],label='j', color = 'green')
     plt.plot(time,thing[:,3],label='k', color = 'blue')
     plt.legend(loc='best')
     plt.grid()
-    plt.show()
+    #plt.show()
+    
+plt.figure(figsize=[24,12])
 
+plt.subplot(231)
 plot(con,time)
+plt.xlabel('time')
+plt.ylabel('con')
+
+plt.subplot(232)
 plot(q1a,time)
+plt.xlabel('time')
+plt.ylabel('q1a')
+
+plt.subplot(233)
 plot(q2a,time)
+plt.xlabel('time')
+plt.ylabel('q2a')
+
+plt.subplot(234)
 plot(p1a,time)
+plt.xlabel('time')
+plt.ylabel('p1a')
+
+plt.subplot(235)
 plot(p2a,time)
+plt.xlabel('time')
+plt.ylabel('p2a')
+
+plt.tight_layout()
+
+plt.show()
