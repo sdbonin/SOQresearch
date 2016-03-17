@@ -113,6 +113,8 @@ q2 = vec_mat(np.random.rand(4))
 p1 = np.random.rand(4)
 p2 = np.random.rand(4)
 
+# this definition of p1 and p2 ensures the condition that the real part of 
+# p_dagger*q is zero at t=0
 p1[0] = -qvecmult(qveccon(p1),mat_vec(q1))[0]
 p2[0] = -qvecmult(qveccon(p2),mat_vec(q2))[0]
 
