@@ -93,12 +93,12 @@ def q1_dot(q1,q2,p1,p2,a):
     return (p1 - a*np.dot(q1,np.dot(qmatcon(q2),p2)))   \
            /(1. - qmatmagsqr(q1)*qmatmagsqr(q2)*a**2)
 
-def p1_dot(q1,q2,q2dot,a,w):
+def p1_dot(q1,q2,q1dot,q2dot,a,w):
     '''
     takes the current values of things we know and the hopefully recently
     calculated derivatives of q1,q2 and uses them to find other derivatives
     '''
-    return a*np.dot(qmatcon(q2dot),q2) - q1*w**2
+    return a*np.dot(q1dot,np.dot(qmatcon(q2dot),q2)) - q1*w**2
 
 #------------------------------------------------------------------------------
 #          Defining necessary constants and initial conditions
@@ -110,9 +110,14 @@ a = 0.001 # coupling constant. \alpha in our notation
 
 q1 = vec_mat(np.random.rand(4))
 q2 = vec_mat(np.random.rand(4))
-p1 = vec_mat(np.random.rand(4))
-p2 = vec_mat(np.random.rand(4))
+p1 = np.random.rand(4)
+p2 = np.random.rand(4)
 
+p1[0] = -qvecmult(qveccon(p1),mat_vec(q1))[0]
+p2[0] = -qvecmult(qveccon(p2),mat_vec(q2))[0]
+
+p1 = vec_mat(p1)
+p2 = vec_mat(p2)
 #------------------------------------------------------------------------------
 #                     Defining loop parameters
 #            AKA "Configuring the space-time continuum"
@@ -151,8 +156,8 @@ while t<6:
     con.append(mat_vec(conserved(q1,q2,p1,p2)))
     q1d = q1_dot(q1,q2,p1,p2,a)
     q2d = q1_dot(q2,q1,p2,p1,a)
-    p1d = p1_dot(q1,q2,q2d,a,w)
-    p2d = p1_dot(q2,q1,q1d,a,w)
+    p1d = p1_dot(q1,q2,q1d,q2d,a,w)
+    p2d = p1_dot(q2,q1,q2d,q1d,a,w)
     q1 += q1d*dt
     q2 += q2d*dt
     p1 += p1d*dt
