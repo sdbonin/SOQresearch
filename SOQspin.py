@@ -12,11 +12,13 @@ from numpy import mod as mod
 import matplotlib.animation as animation
 
 omega_0 = 1
-alpha = 0.001
+alpha = 0.005
 arguments = np.array([[omega_0, alpha]])
 dt = .01
-totaltime = 20
+totaltime = 1
 t0 = 0
+totalplots = 20
+
 
 def quatreal(q):
     '''
@@ -33,7 +35,7 @@ def quatreal(q):
     dmat = d*np.array([[0,0,0,1],[0,0,-1,0],[0,1,0,0],[-1,0,0,0]])
     return amat+bmat+cmat+dmat
     
-def hconj(q):
+def conj(q):
     q = np.array([q[0]])
     q[0,1]=-q[0,1]
     q[0,2]=-q[0,2]
@@ -67,8 +69,8 @@ p_2 = np.random.randn(4,4)
 pmat_1 = quatreal(p_1)
 pmat_2 = quatreal(p_2)
 
-condition_1 = np.dot(hconj(pmat_1),q_1)
-condition_2 = np.dot(hconj(pmat_2),q_2)
+condition_1 = np.dot(conj(pmat_1),q_1)
+condition_2 = np.dot(conj(pmat_2),q_2)
 
 p_1[0] = condition_1[0,0]
 p_2[0] = condition_2[0,0]
@@ -107,25 +109,25 @@ def SOQsys(time,input,arguments):
     if divisor == 0:
         output = "failure"
     else:
-        dot1 = np.dot(q_1,hconj(q_2))
+        dot1 = np.dot(q_1,conj(q_2))
         dot2 = np.dot(dot1,p_2)
         top1 = p_1 - alpha*dot2
         q_1_dt = top1*(1/divisor)
         #q_1_dt = quatreal(q_1_dt)
         #
-        dot1 = np.dot(q_2,hconj(q_1))
+        dot1 = np.dot(q_2,conj(q_1))
         dot2 = np.dot(dot1,p_1)
         top2 = p_2 - alpha*dot2
         q_2_dt = top2*(1/divisor)
         #q_2_dt = quatreal(q_2_dt)
         #
         #
-        dot1 = np.dot(q_1_dt,hconj(q_2_dt))
+        dot1 = np.dot(q_1_dt,conj(q_2_dt))
         dot2 = np.dot(dot1,q_2)
         p_1_dt = -(omega_0**2)*q_1 + alpha*dot2
         #p_1_dt = quatreal(p_1_dt)
         #
-        dot1 = np.dot(q_2_dt,hconj(q_1_dt))
+        dot1 = np.dot(q_2_dt,conj(q_1_dt))
         dot2 = np.dot(dot1,q_1)
         p_2_dt = -(omega_0**2)*q_2 + alpha*dot2
         #p_2_dt = quatreal(p_2_dt)
@@ -142,7 +144,7 @@ S_1x = np.zeros((1,1))
 S_2x = np.zeros((1,1))
 
 while runODE.successful() and runODE.t<totaltime:
-    print("runODE.t = ",runODE.t)
+    #print("runODE.t = ",runODE.t)
     check = runODE.integrate(runODE.t+dt)
     #print("runODE.integrate(runODE.t+dt) = ")
     #print(check)
@@ -153,8 +155,8 @@ while runODE.successful() and runODE.t<totaltime:
     q_2 = quatreal(np.array([results[0,4:8]]))
     p_1 = quatreal(np.array([results[0,8:12]]))
     p_2 = quatreal(np.array([results[0,12:16]]))
-    S_1 = np.dot(hconj(p_1),q_1)
-    S_2 = np.dot(hconj(p_2),q_2)
+    S_1 = np.dot(conj(p_1),q_1)
+    S_2 = np.dot(conj(p_2),q_2)
     '''if mod(i,10)==0:
         print("q_1[0] = ")
         print(q_1[0])
@@ -162,12 +164,12 @@ while runODE.successful() and runODE.t<totaltime:
         print(q_2[0])
         print("p_1[0] = ")
         print(p_1[0])
-        print("hconj(p_1)[0] = ")
-        print(hconj(p_1)[0])
+        print("conj(p_1)[0] = ")
+        print(conj(p_1)[0])
         print("p_2[0] = ")
         print(p_2[0])
-        print("hconj(p_2)[0] = ")
-        print(hconj(p_2)[0])
+        print("conj(p_2)[0] = ")
+        print(conj(p_2)[0])
         print("S_1[0] = ")
         print(S_1[0])
         print("S_2[0] = ")
@@ -285,29 +287,25 @@ plots = 0
 #ax.set_ylim([-1,1])
 #ax.set_zlim([-1,1])
 
-totalplots = 50
 display = np.ceil(totaltime/dt/totalplots)
 
 plt.ion()
 plt.show()
 plt.figure(figsize=[24,12])
-maximum_S = np.sqrt(3*(np.amax(S_plot)**2))
-maximum_q = np.sqrt(3*(np.amax(q_plot)**2))
-maximum_p = np.sqrt(3*(np.amax(p_plot)**2))
+maximum_S = np.sqrt([3*(np.amax(np.absolute(S_plot[:,0:6]))**2)])
+print("np.amax(S_plot) = ")
+print(np.amax(S_plot))
+maximum_q = np.sqrt([3*(np.amax(np.absolute(q_plot[:,0:6]))**2)])
+print("np.amax(q_plot) = ")
+print(np.amax(q_plot))
+print("maximum_q = ")
+print(maximum_q)
+maximum_p = np.sqrt([3*(np.amax(np.absolute(p_plot[:,0:6]))**2)])
+print("maximum_p = ")
+print(maximum_p)
+print("np.amax(p_plot) = ")
+print(np.amax(p_plot))
 
-'''#plt.figure(figsize=(8,6),dpi=80)
-#plt.set_size_inches(18.5, 10.5)
-# Get current size
-fig_size = plt.rcParams["figure.figsize"]
- 
-# Prints: [8.0, 6.0]
-print("Current size:", fig_size)
- 
-# Set figure width to 12 and height to 9
-fig_size[0] = 12
-fig_size[1] = 9
-plt.rcParams["figure.figsize"] = fig_size
-'''
 x = np.zeros((1,2))
 y = np.zeros((1,2))
 z = np.zeros((1,2))
@@ -317,15 +315,17 @@ zvec = np.zeros((1,3))
 #print("qvec_2 =")
 #print(qvec_2)
 
+
 while plots<totaltime/dt:
     if mod(plots,display) == 0:
-        plt.clf()
-        ax = plt.subplot(131, projection='3d',aspect='equal')
+        plt.cla()
+        ax1 = plt.subplot(131, projection='3d',aspect='equal')
         plt.tight_layout()
+        ax1.set_xlim([-maximum_q,maximum_q])
+        ax1.set_ylim([-maximum_q,maximum_q])
+        ax1.set_zlim([-maximum_q,maximum_q])
         #plt.axis('equal')
-        ax.set_xlim([-maximum_q,maximum_q])
-        ax.set_ylim([-maximum_q,maximum_q])
-        ax.set_zlim([-maximum_q,maximum_q])
+        
         #x[0] = np.array(S_plot[plots,0:2])
         #y[0] = np.array(S_plot[plots,2:4])
         #z[0] = np.array(S_plot[plots,4:6])
@@ -357,16 +357,18 @@ while plots<totaltime/dt:
         #u = np.array([np.sin(plots),np.cos(plots)])
         #v = np.array([np.cos(plots),np.sin(plots)])
         #w = 1
-        ax.quiver(0,0,0,u_1,v_1,w_1,pivot='tail',length=length_1,colors='r')
-        ax.quiver(0,0,0,u_2,v_2,w_2,pivot='tail',length=length_2,colors='b')
+        ax1.quiver(0,0,0,u_1,v_1,w_1,pivot='tail',length=length_1,colors='r')
+        ax1.quiver(0,0,0,u_2,v_2,w_2,pivot='tail',length=length_2,colors='b')
         ''''''
-        ax = plt.subplot(132, projection='3d',aspect='equal')
-        ax.set_xlim([-maximum_p,maximum_p])
-        ax.set_ylim([-maximum_p,maximum_p])
-        ax.set_zlim([-maximum_p,maximum_p])
+        ax2 = plt.subplot(132, projection='3d',aspect='equal')
+        ax2.set_xlim([-maximum_p,maximum_p])
+        ax2.set_ylim([-maximum_p,maximum_p])
+        ax2.set_zlim([-maximum_p,maximum_p])
         vecp_1 = np.append(zvec,p_plot[plots,0:3])
         print('p_plot[plots,0:3] =')
         print(p_plot[plots,0:3])
+        print('p_plot[plots,3:6] =')
+        print(p_plot[plots,3:6])
         vecp_2 = np.append(zvec,p_plot[plots,3:6])
         vectors_1 = np.array([vecp_1])
         vectors_2 = np.array([vecp_2])
@@ -374,33 +376,52 @@ while plots<totaltime/dt:
         x_2,y_2,z_2,u_2,v_2,w_2 = zip(*vectors_2)
         length_1 = np.sqrt((vectors_1[0,3]**2)+(vectors_1[0,4]**2)+(vectors_1[0,5]**2))
         length_2 = np.sqrt((vectors_2[0,3]**2)+(vectors_2[0,4]**2)+(vectors_2[0,5]**2))
-        ax.quiver(0,0,0,u_1,v_1,w_1,pivot='tail',length=length_1,colors='r')
-        ax.quiver(0,0,0,u_2,v_2,w_2,pivot='tail',length=length_2,colors='b')
+        print('length_1 = ')
+        print(length_1)
+        ax2.quiver(0,0,0,u_1,v_1,w_1,pivot='tail',length=length_1,colors='r')
+        ax2.quiver(0,0,0,u_2,v_2,w_2,pivot='tail',length=length_2,colors='b')
+        print('length_2 = ')
+        print(length_2)
         #plt.axis('equal')
         ''''''
-        ax = plt.subplot(133, projection='3d',aspect='equal')
-        ax.set_xlim([-maximum_S,maximum_S])
-        ax.set_ylim([-maximum_S,maximum_S])
-        ax.set_zlim([-maximum_S,maximum_S])
+        ax3 = plt.subplot(133, projection='3d',aspect='equal')
+        ax3.set_xlim([-maximum_S,maximum_S])
+        ax3.set_ylim([-maximum_S,maximum_S])
+        ax3.set_zlim([-maximum_S,maximum_S])
         vecS_1 = np.append(zvec,[S_plot[plots,0],S_plot[plots,1],S_plot[plots,2]])
         print('S_plot[plots,0:3] =')
         print(S_plot[plots,0:3])
+        print('S_plot[plots,3:6] =')
+        print(S_plot[plots,3:6])
         vecS_2 = np.append(zvec,[S_plot[plots,3],S_plot[plots,4],S_plot[plots,5]])
         vectors_1 = np.array([vecS_1])
         vectors_2 = np.array([vecS_2])
         x_1,y_1,z_1,u_1,v_1,w_1 = zip(*vectors_1)
         x_2,y_2,z_2,u_2,v_2,w_2 = zip(*vectors_2)
+        #magnitude_1 = np.sqrt(S_plot[plots,0]**2 + S_plot[plots,1]**2 +S_plot[plots,2]**2 + S_plot[plots,6]**2)
+        #print("magnitude_1 = ")
+        #print(magnitude_1)
+        q_1 = np.append(q_plot[plots,0:3],q_plot[plots,6])
+        q_2 = np.append(q_plot[plots,3:6],q_plot[plots,7])
+        p_1 = np.append(p_plot[plots,0:3],p_plot[plots,6])
+        p_2 = np.append(p_plot[plots,3:6],p_plot[plots,7])
         length_1 = np.sqrt((vectors_1[0,3]**2)+(vectors_1[0,4]**2)+(vectors_1[0,5]**2))
         length_2 = np.sqrt((vectors_2[0,3]**2)+(vectors_2[0,4]**2)+(vectors_2[0,5]**2))
-        ax.quiver(0,0,0,u_1,v_1,w_1,pivot='tail',length=length_1,colors='r')
-        ax.quiver(0,0,0,u_2,v_2,w_2,pivot='tail',length=length_2,colors='b')
+        print('length_1 = ')
+        print(length_1)
+        print('length_2 = ')
+        print(length_2)
+        ax3.quiver(0,0,0,u_1,v_1,w_1,pivot='tail',length=length_1,colors='r')
+        ax3.quiver(0,0,0,u_2,v_2,w_2,pivot='tail',length=length_2,colors='b')
         #plt.axis('equal')
         #print('plots =',plots)
         plt.draw()
-        plt.pause(.0001)
+        #plt.pause(.0001)
+        #time.sleep(0.05)
     plots = plots+1
 print("stopped")
 plt.ioff()  
 plt.show()
+
     
 #test = SOQsys(t,input,omega_0,alpha)
