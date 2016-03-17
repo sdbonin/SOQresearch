@@ -66,13 +66,13 @@ def qmatnorm(M):
 
 def qvecmagsqr(vec):
     '''
-    returns the magnitude of a 4-vector quaternion
+    returns the magnitude squared of a 4-vector quaternion
     '''
     return qvecmult(qveccon(vec),vec)[0]
 
 def qmatmagsqr(M):
     '''
-    piggy-backs off the previous function to give the magnitude of 2x2 imaginary matrix
+    piggy-backs off the previous function to give the magnitude squared of 2x2 imaginary matrix
     quaternions
     '''
     return qvecmagsqr(mat_vec(M))
@@ -102,7 +102,7 @@ def p1_dot(q1,q2,q1dot,q2dot,a,w):
 
 #------------------------------------------------------------------------------
 #          Defining necessary constants and initial conditions
-#                   AKA "on the seventh day..."
+#                   AKA "on the first day..."
 #------------------------------------------------------------------------------
 
 w = 1. # \omega_0 in our notation
@@ -123,7 +123,7 @@ p2 = vec_mat(p2)
 #            AKA "Configuring the space-time continuum"
 #------------------------------------------------------------------------------
 
-dt = 0.001 #time step. setting to 0.0001 results in 2000 iterations
+dt = 0.001 #time step
 t  = 0
 
 q1a = []
