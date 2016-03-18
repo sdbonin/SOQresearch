@@ -290,7 +290,6 @@ plots = 0
 display = np.ceil(totaltime/dt/totalplots)
 
 plt.ion()
-plt.show()
 plt.figure(figsize=[24,12])
 maximum_S = np.sqrt([3*(np.amax(np.absolute(S_plot[:,0:6]))**2)])
 print("np.amax(S_plot) = ")
@@ -415,9 +414,9 @@ while plots<totaltime/dt:
         ax3.quiver(0,0,0,u_2,v_2,w_2,pivot='tail',length=length_2,colors='b')
         #plt.axis('equal')
         #print('plots =',plots)
-        plt.draw()
-        #plt.pause(.0001)
+        plt.pause(.0001)
         #time.sleep(0.05)
+        plt.draw()
     plots = plots+1
 print("stopped")
 plt.ioff()  
