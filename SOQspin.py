@@ -15,9 +15,9 @@ omega_0 = 1
 alpha = 0.005
 arguments = np.array([[omega_0, alpha]])
 dt = .01
-totaltime = 1
+totaltime = 5
 t0 = 0
-totalplots = 20
+totalplots = 100
 
 
 def quatreal(q):
@@ -48,6 +48,8 @@ qvec_2 = 1*np.random.randn(1,4)
 '''qvec_1 = np.array([[.1,.2,.3,.4]])
 qvec_2 = np.array([[.3,-.3,-.3,.3]])'''
 
+'''normalize q'''
+
 print("qvec_1 =")
 print(qvec_1)
 print("qvec_2 =")
@@ -66,14 +68,23 @@ qdot_2 = np.zeros((4,4))
 '16-19,20-23'
 p_1 = np.random.randn(4,4)
 p_2 = np.random.randn(4,4)
+p_1[0] = 0
+p_2[0] = 0
+
 pmat_1 = quatreal(p_1)
 pmat_2 = quatreal(p_2)
 
 condition_1 = np.dot(conj(pmat_1),q_1)
 condition_2 = np.dot(conj(pmat_2),q_2)
 
+'''condition should be purely imaginary'''
+
+
 p_1[0] = condition_1[0,0]
 p_2[0] = condition_2[0,0]
+
+
+'''normalize p after it's fixed'''
 
 p_1 = quatreal(p_1)
 p_2 = quatreal(p_2)
@@ -235,7 +246,7 @@ while runODE.successful() and runODE.t<totaltime:
         p_2y = np.append(p_2y,p_2[0,2])
         p_2z = np.append(p_2z,p_2[0,3])
     i = i + 1
-    #print("S_1x.size = ",S_1x.size)
+    print("S_1x.size = ",S_1x.size)
     #time.sleep(1)
     
 
