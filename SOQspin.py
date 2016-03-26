@@ -1,5 +1,28 @@
 """
-Work in progess - sdbonin
+SOQspin.py - sdbonin (comments are work in progress, cleaning up the code for efficiency and checking physics)
+****************************
+***How to run on Windows:***
+****************************
+1) Download Python 3.5, I recommend here:
+    https://www.continuum.io/downloads#_windows
+
+2) Chances are you found this on Github anyway, but in case you haven't the repository is here:
+    https://github.com/sdbonin/SOQresearch
+    
+    Feel free to email me at sdbonin **at** gmail **DOT** com and I'll add you as a collaborator.
+    
+    There are many options, but for our purposes I recommend using the Github app which can be downloaded here:
+    https://desktop.github.com/
+    
+3) Open up a command prompt and cd to the SOQresearch Github directory. For example:
+    "cd C:\sdbonin\GitHub\SOQresearch" without quotes (or wherever you have Github sync your files.)
+    
+4) now run the command:
+    "python SOQspin.py"
+
+Several variables are editable, should be located at the top of the code. I intend to make this more interactive from the command prompt.
+
+If you edit code or comments, please make sure to make a quick note of what you do when you sync it to Github.
 """
 
 import numpy as np
@@ -11,14 +34,29 @@ import time
 from numpy import mod as mod
 import matplotlib.animation as animation
 
+'''
+************************
+***Editable Variables***
+************************
+omega_0, alpha <- editable constants
+dt <- max time step for integrator
+totaltime <- total time integrator will run
+t0 <- initial time
+total plots <- the total number of plots, evenly distributed between t0 and totaltime
+'''
 omega_0 = 1
-alpha = 0.005
-arguments = np.array([[omega_0, alpha]])
+alpha = 0.01
 dt = .01
-totaltime = 5
+totaltime = 100
 t0 = 0
 totalplots = 100
 
+'''
+arguments packages the omega_0 and alpha into a numpy array for use in integrable function SOQsys.
+'''
+arguments = np.array([[omega_0, alpha]])
+
+np.random.seed(42)
 
 def quatreal(q):
     '''
@@ -36,58 +74,94 @@ def quatreal(q):
     return amat+bmat+cmat+dmat
     
 def conj(q):
+    '''
+    Take a 4x4 real quaternion matrix and makes the complex conjugate, 
+    and uses quatreal to repackage it as a 4x4 real matrix
+    '''
     q = np.array([q[0]])
     q[0,1]=-q[0,1]
     q[0,2]=-q[0,2]
     q[0,3]=-q[0,3]
-    hermitianconjugate = quatreal(q)
-    return hermitianconjugate    
+    complexconjugate = quatreal(q)
+    return complexconjugate
 
-qvec_1 = 1*np.random.randn(1,4)
+def normalize(q):
+    '''
+    Takes a 4x4 quaternion vector and normalizes it
+    '''
+    q = np.array([q[0]])
+    print('q =')
+    print(q)
+    norm = 1/np.sqrt(q[0,0]**2+q[0,1]**2+q[0,2]**2+q[0,3]**2)
+    print('norm =')
+    print(norm)
+    q = norm*q
+    print('norm*q =')
+    print(q)
+    normalizedq = quatreal(q)
+    return normalizedq
+
+'''
+initialize randrom q_1 and q_2
+'''
+
+'''qvec_1 = 1*np.random.randn(1,4)
 qvec_2 = 1*np.random.randn(1,4)
-'''qvec_1 = np.array([[.1,.2,.3,.4]])
-qvec_2 = np.array([[.3,-.3,-.3,.3]])'''
-
-'''normalize q'''
-
-print("qvec_1 =")
-print(qvec_1)
-print("qvec_2 =")
-print(qvec_2)
-'''qvec_1 = -0.1*np.ones((1,4))
-qvec_2 = 0.1*np.ones((1,4))'''
-
-'0-3,4-7'
 q_1 = quatreal(qvec_1)
 q_2 = quatreal(qvec_2)
+'''
+
+q_1 = np.array([[1,0,0,0]])
+q_2 = np.array([[1,0,0,0]])
+
+q_1 = quatreal(q_1)
+q_2 = quatreal(q_2)
+
+
+print('q_1 =')
+print(q_1)
+
+'''
+normalize q
+'''
+
+
+q_1 = normalize(q_1)
+q_2 = normalize(q_2)
 
 '8-11,12-15'
 qdot_1 = np.zeros((4,4))
 qdot_2 = np.zeros((4,4))
 
 '16-19,20-23'
-p_1 = np.random.randn(4,4)
-p_2 = np.random.randn(4,4)
-p_1[0] = 0
-p_2[0] = 0
+p_1 = np.random.randn(1,4)
+p_2 = np.random.randn(1,4)
+p_1[0,0] = 0
+p_2[0,0] = 0
+
+print('p_1=',p_1)
+print('p_2=',p_2)
 
 pmat_1 = quatreal(p_1)
 pmat_2 = quatreal(p_2)
 
-condition_1 = np.dot(conj(pmat_1),q_1)
-condition_2 = np.dot(conj(pmat_2),q_2)
+'''condition_1 = np.dot(conj(pmat_1),q_1)
+condition_2 = np.dot(conj(pmat_2),q_2)'''
 
 '''condition should be purely imaginary'''
 
 
-p_1[0] = condition_1[0,0]
-p_2[0] = condition_2[0,0]
+'''p_1[0] = condition_1[0,0]
+p_2[0] = condition_2[0,0]'''
 
 
 '''normalize p after it's fixed'''
 
 p_1 = quatreal(p_1)
 p_2 = quatreal(p_2)
+
+p_1 = normalize(p_1)
+p_2 = normalize(p_2)
 
 '24-27,28-31'
 pdot_1 = np.zeros((4,4))
@@ -96,6 +170,7 @@ pdot_2 = np.zeros((4,4))
 #initialvalues = np.append(q_1[0],[q_2[0],qdot_1[0],qdot_2[0],p_1[0],p_2[0],pdot_1[0],pdot_2[0]])
 initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
 
+print('gets to here')
 def mag(q):
     magnitude = np.sqrt(q[0,0]**2+q[0,1]**2+q[0,2]**2+q[0,3]**2)
     return magnitude
@@ -153,6 +228,7 @@ runODE.set_initial_value(initialvalues,t0).set_f_params(arguments)
 i = 0
 S_1x = np.zeros((1,1))
 S_2x = np.zeros((1,1))
+time = np.zeros((1,1))
 
 while runODE.successful() and runODE.t<totaltime:
     #print("runODE.t = ",runODE.t)
@@ -218,6 +294,7 @@ while runODE.successful() and runODE.t<totaltime:
         p_2x = p_2[0,1]
         p_2y = p_2[0,2]
         p_2z = p_2[0,3]
+        time[0,0] = runODE.t
     elif i>0:
         S_1r = np.append(S_1r,S_1[0,0])
         S_1x = np.append(S_1x,S_1[0,1])
@@ -245,8 +322,11 @@ while runODE.successful() and runODE.t<totaltime:
         p_2x = np.append(p_2x,p_2[0,1])
         p_2y = np.append(p_2y,p_2[0,2])
         p_2z = np.append(p_2z,p_2[0,3])
+        time = np.append(time,runODE.t)
+        #print('time =')
+        #print(time)
     i = i + 1
-    print("S_1x.size = ",S_1x.size)
+    #print("S_1x.size = ",S_1x.size)
     #time.sleep(1)
     
 
@@ -280,6 +360,25 @@ p_plot[:,5] = p_2z
 p_plot[:,6] = p_1r
 p_plot[:,7] = p_2r
 
+plt.figure()
+
+plt.subplot(121)
+plt.plot(time,S_1x,label='S_1i',color='red')
+plt.plot(time,S_1y,label='S_1j',color='blue')
+plt.plot(time,S_1z,label='S_1k',color='green')
+plt.xlabel('S_1')
+plt.ylabel('time')
+plt.legend(loc='best')
+
+plt.subplot(122)
+plt.plot(time,S_2x,label='S_2i',color='red')
+plt.plot(time,S_2y,label='S_2j',color='blue')
+plt.plot(time,S_2z,label='S_2k',color='green')
+plt.xlabel('S_2')
+plt.ylabel('time')
+plt.legend(loc='best')
+
+plt.show()
 
 plots = 0
 
@@ -298,7 +397,7 @@ plots = 0
 #ax.set_ylim([-1,1])
 #ax.set_zlim([-1,1])
 
-display = np.ceil(totaltime/dt/totalplots)
+'''display = np.ceil(totaltime/dt/totalplots)
 
 plt.ion()
 plt.figure(figsize=[24,12])
@@ -319,14 +418,14 @@ print(np.amax(p_plot))
 x = np.zeros((1,2))
 y = np.zeros((1,2))
 z = np.zeros((1,2))
-zvec = np.zeros((1,3))
+zvec = np.zeros((1,3))'''
 #print("qvec_1 =")
 #print(qvec_1)
 #print("qvec_2 =")
 #print(qvec_2)
 
 
-while plots<totaltime/dt:
+'''while plots<totaltime/dt:
     if mod(plots,display) == 0:
         plt.cla()
         ax1 = plt.subplot(131, projection='3d',aspect='equal')
@@ -431,7 +530,7 @@ while plots<totaltime/dt:
     plots = plots+1
 print("stopped")
 plt.ioff()  
-plt.show()
+plt.show()'''
 
     
 #test = SOQsys(t,input,omega_0,alpha)

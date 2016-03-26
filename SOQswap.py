@@ -15,6 +15,7 @@ this code or a better visualization solution needs to be found.
 
 
 import numpy as np
+import time
 
 # a set of init quaternions and the identity matrix for building general q-matrices
 rm = np.identity(2)
@@ -108,6 +109,9 @@ def p1_dot(q1,q2,q1dot,q2dot,a,w):
 w = 1. # \omega_0 in our notation
 a = 0.001 # coupling constant. \alpha in our notation
 
+np.random.seed(8675309)
+
+
 q1 = vec_mat(np.random.rand(4))
 q2 = vec_mat(np.random.rand(4))
 p1 = np.random.rand(4)
@@ -120,6 +124,22 @@ p2[0] = -qvecmult(qveccon(p2),mat_vec(q2))[0]
 
 p1 = vec_mat(p1)
 p2 = vec_mat(p2)
+
+print('mat_vec(np.dot(qmatcon(p1),q1)) =')
+print(mat_vec(np.dot(qmatcon(p1),q1)))
+
+time.sleep(10)
+
+
+'''q1 = vec_mat(np.array([1,0,0,0]))
+q2 = vec_mat(np.array([-1,0,0,0]))
+p1 = vec_mat(np.random.rand(4))
+p2 = vec_mat(np.random.rand(4))
+p1[0] = 0
+p2[0] = 0
+p1 = qmatnorm(p1)
+p2 = qmatnorm(p2)
+'''
 #------------------------------------------------------------------------------
 #                     Defining loop parameters
 #            AKA "Configuring the space-time continuum"
@@ -132,6 +152,8 @@ q1a = []
 q2a = []
 p1a = []
 p2a = []
+s1a = []
+s2a = []
 time = []
 
 #------------------------------------------------------------------------------
@@ -149,13 +171,15 @@ def conserved(q1,q2,p1,p2):
 #                     AKA "Let 'er rip"
 #------------------------------------------------------------------------------
 
-while t<6:
+while t<100:
     q1a.append(mat_vec(q1))
     q2a.append(mat_vec(q2))
     p1a.append(mat_vec(p1))
     p2a.append(mat_vec(p2))
     time.append(t)
-    con.append(mat_vec(conserved(q1,q2,p1,p2)))
+    s1a.append(mat_vec(np.dot(qmatcon(p1),q1)))
+    s2a.append(mat_vec(np.dot(qmatcon(p2),q2)))
+    #con.append(mat_vec(conserved(q1,q2,p1,p2)))
     q1d = q1_dot(q1,q2,p1,p2,a)
     q2d = q1_dot(q2,q1,p2,p1,a)
     p1d = p1_dot(q1,q2,q1d,q2d,a,w)
@@ -170,6 +194,8 @@ q1a = np.array(q1a)
 q2a = np.array(q2a)
 p1a = np.array(p1a)
 p2a = np.array(p2a)
+s1a = np.array(s1a)
+s2a = np.array(s2a)
 time = np.array(time)
 con = np.array(con)
 
@@ -193,29 +219,34 @@ def plot(thing,time):
 plt.figure(figsize=[24,12])
 
 plt.subplot(231)
-plot(con,time)
-plt.xlabel('time')
-plt.ylabel('con')
-
-plt.subplot(232)
 plot(q1a,time)
 plt.xlabel('time')
 plt.ylabel('q1a')
 
-plt.subplot(233)
+plt.subplot(232)
 plot(q2a,time)
 plt.xlabel('time')
 plt.ylabel('q2a')
 
-plt.subplot(234)
+plt.subplot(233)
 plot(p1a,time)
 plt.xlabel('time')
 plt.ylabel('p1a')
 
-plt.subplot(235)
+plt.subplot(234)
 plot(p2a,time)
 plt.xlabel('time')
 plt.ylabel('p2a')
+
+plt.subplot(235)
+plot(s1a,time)
+plt.xlabel('time')
+plt.ylabel('s1a')
+
+plt.subplot(236)
+plot(s2a,time)
+plt.xlabel('time')
+plt.ylabel('s2a')
 
 plt.tight_layout()
 
