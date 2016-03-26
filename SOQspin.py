@@ -34,7 +34,7 @@ import time
 from numpy import mod as mod
 import matplotlib.animation as animation
 
-'''
+"""
 ************************
 ***Editable Variables***
 ************************
@@ -43,7 +43,7 @@ dt <- max time step for integrator
 totaltime <- total time integrator will run
 t0 <- initial time
 total plots <- the total number of plots, evenly distributed between t0 and totaltime
-'''
+"""
 omega_0 = 1
 alpha = 0.01
 dt = .01
@@ -51,18 +51,18 @@ totaltime = 100
 t0 = 0
 totalplots = 100
 
-'''
+"""
 arguments packages the omega_0 and alpha into a numpy array for use in integrable function SOQsys.
-'''
+"""
 arguments = np.array([[omega_0, alpha]])
 
 np.random.seed(42)
 
 def quatreal(q):
-    '''
+    """
     Turn a 4-vector quaternion into a real matrix
     https://en.wikipedia.org/wiki/Quaternion#Matrix_representations
-    '''
+    """
     a = q[0,0]
     b = q[0,1]
     c = q[0,2]
@@ -74,10 +74,10 @@ def quatreal(q):
     return amat+bmat+cmat+dmat
     
 def conj(q):
-    '''
-    Take a 4x4 real quaternion matrix and makes the complex conjugate, 
+    """
+    Takes a 4x4 real quaternion matrix and makes the complex conjugate, 
     and uses quatreal to repackage it as a 4x4 real matrix
-    '''
+    """
     q = np.array([q[0]])
     q[0,1]=-q[0,1]
     q[0,2]=-q[0,2]
@@ -86,9 +86,9 @@ def conj(q):
     return complexconjugate
 
 def normalize(q):
-    '''
+    """
     Takes a 4x4 quaternion vector and normalizes it
-    '''
+    """
     q = np.array([q[0]])
     print('q =')
     print(q)
@@ -101,9 +101,9 @@ def normalize(q):
     normalizedq = quatreal(q)
     return normalizedq
 
-'''
-initialize randrom q_1 and q_2
-'''
+"""
+initialize random q_1 and q_2
+"""
 
 '''qvec_1 = 1*np.random.randn(1,4)
 qvec_2 = 1*np.random.randn(1,4)
@@ -111,6 +111,9 @@ q_1 = quatreal(qvec_1)
 q_2 = quatreal(qvec_2)
 '''
 
+"""
+initialize variables q_1 and q_2
+"""
 q_1 = np.array([[1,0,0,0]])
 q_2 = np.array([[1,0,0,0]])
 
@@ -118,20 +121,26 @@ q_1 = quatreal(q_1)
 q_2 = quatreal(q_2)
 
 
-print('q_1 =')
-print(q_1)
-
-'''
+"""
 normalize q
-'''
-
+"""
 
 q_1 = normalize(q_1)
 q_2 = normalize(q_2)
 
+
+"""
+initialize qdot_1 and qdot_2
+"""
+
 '8-11,12-15'
 qdot_1 = np.zeros((4,4))
 qdot_2 = np.zeros((4,4))
+
+"""
+initialize p_1 and p_2
+p_# = [[0,real,real,real]]
+"""
 
 '16-19,20-23'
 p_1 = np.random.randn(1,4)
@@ -139,23 +148,16 @@ p_2 = np.random.randn(1,4)
 p_1[0,0] = 0
 p_2[0,0] = 0
 
-print('p_1=',p_1)
-print('p_2=',p_2)
-
-pmat_1 = quatreal(p_1)
+"""
+ignore the following for now
+"""
+'''pmat_1 = quatreal(p_1)
 pmat_2 = quatreal(p_2)
-
-'''condition_1 = np.dot(conj(pmat_1),q_1)
-condition_2 = np.dot(conj(pmat_2),q_2)'''
-
-'''condition should be purely imaginary'''
-
-
-'''p_1[0] = condition_1[0,0]
+condition_1 = np.dot(conj(pmat_1),q_1)
+condition_2 = np.dot(conj(pmat_2),q_2)
+"""condition should be purely imaginary"""
+p_1[0] = condition_1[0,0]
 p_2[0] = condition_2[0,0]'''
-
-
-'''normalize p after it's fixed'''
 
 p_1 = quatreal(p_1)
 p_2 = quatreal(p_2)
@@ -163,32 +165,48 @@ p_2 = quatreal(p_2)
 p_1 = normalize(p_1)
 p_2 = normalize(p_2)
 
+"""
+initialize pdots
+"""
+
 '24-27,28-31'
 pdot_1 = np.zeros((4,4))
 pdot_2 = np.zeros((4,4))
 
+"""
+repackage initial values into a numpy array for scipy.integrate
+"""
 #initialvalues = np.append(q_1[0],[q_2[0],qdot_1[0],qdot_2[0],p_1[0],p_2[0],pdot_1[0],pdot_2[0]])
 initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
 
-print('gets to here')
+
 def mag(q):
+    """
+    calculate magnitude of 4x4 real quaternion
+    """
     magnitude = np.sqrt(q[0,0]**2+q[0,1]**2+q[0,2]**2+q[0,3]**2)
     return magnitude
 
 def SOQsys(time,input,arguments):
-    '''
+    """
+    This is the system of first order ODEs we're solving
+    """
+    """
     initialize real matrices from input
-    '''
+    """
     q_1 = quatreal(np.array([input[0:4]]))
     q_2 = quatreal(np.array([input[4:8]]))
     p_1 = quatreal(np.array([input[8:12]]))
     p_2 = quatreal(np.array([input[12:16]]))
     
+    """
+    pull out omega_0 and alpha from arguments
+    """
     omega_0 = arguments[0,0]
     alpha = arguments[0,1]
-    '''
+    """
     matrix operations
-    '''
+    """
     divisor = 1-(alpha**2)*((mag(q_1)**2)*(mag(q_2)**2))
     #print("divisor =")
     #print(divisor)
@@ -207,7 +225,6 @@ def SOQsys(time,input,arguments):
         q_2_dt = top2*(1/divisor)
         #q_2_dt = quatreal(q_2_dt)
         #
-        #
         dot1 = np.dot(q_1_dt,conj(q_2_dt))
         dot2 = np.dot(dot1,q_2)
         p_1_dt = -(omega_0**2)*q_1 + alpha*dot2
@@ -221,14 +238,35 @@ def SOQsys(time,input,arguments):
         output = np.append(q_1_dt[0],[q_2_dt[0],p_1_dt[0],p_2_dt[0]])
     #print("    time = ",time)
     return output
+    
+"""
+Let me know if the way I'm interpreting how this integrator works is incorrect
+"""
 
+"""
+define our integrator 
+"vode" for a real system of ODE'set'
+"bdf" for stiff functions
+no jacobian
+max number of steps between each dt set to 100
+"""
 runODE = ode(SOQsys).set_integrator('vode',method='bdf',with_jacobian=False,max_step=dt/100)
 runODE.set_initial_value(initialvalues,t0).set_f_params(arguments)
 
 i = 0
+"""
+initialize spin matrices for plotting
+"""
 S_1x = np.zeros((1,1))
 S_2x = np.zeros((1,1))
 time = np.zeros((1,1))
+
+"""
+run scipy.integrate
+"""
+"""
+this can probably be greatly sped up
+"""
 
 while runODE.successful() and runODE.t<totaltime:
     #print("runODE.t = ",runODE.t)
@@ -329,7 +367,9 @@ while runODE.successful() and runODE.t<totaltime:
     #print("S_1x.size = ",S_1x.size)
     #time.sleep(1)
     
-
+"""
+create plotable matrices
+"""
 S_plot = np.zeros((S_1x.size,8))
 S_plot[:,0] = S_1x
 S_plot[:,1] = S_1y
@@ -360,6 +400,10 @@ p_plot[:,5] = p_2z
 p_plot[:,6] = p_1r
 p_plot[:,7] = p_2r
 
+
+"""
+plot figure
+"""
 plt.figure()
 
 plt.subplot(121)
@@ -381,6 +425,10 @@ plt.legend(loc='best')
 plt.show()
 
 plots = 0
+
+"""
+ignore the following code for now
+"""
 
 #print('S_plot =',S_plot[:,0:10])
 #print('S_plot[plots,0:4] =',S_plot[plots,0:3])
