@@ -47,7 +47,7 @@ total plots <- the total number of plots, evenly distributed between t0 and tota
 omega_0 = 1
 alpha = 0.01
 dt = .01
-totaltime = 100
+totaltime = 1
 t0 = 0
 totalplots = 100
 
@@ -400,6 +400,9 @@ p_plot[:,5] = p_2z
 p_plot[:,6] = p_1r
 p_plot[:,7] = p_2r
 
+np.savetxt('S_plot.txt',S_plot,delimiter=',')
+np.savetxt('q_plot.txt',q_plot,delimiter=',')
+np.savetxt('p_plot.txt',p_plot,delimiter=',')
 
 """
 plot figure
