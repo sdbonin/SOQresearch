@@ -32,7 +32,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.pyplot import plot, ion, show
 import time
 from numpy import mod as mod
-import matplotlib.animation as animation
+'''import matplotlib.animation as animation'''
 
 """
 ************************
@@ -403,7 +403,15 @@ p_plot[:,7] = p_2r
 np.savetxt('S_plot.txt',S_plot,delimiter=',')
 np.savetxt('q_plot.txt',q_plot,delimiter=',')
 np.savetxt('p_plot.txt',p_plot,delimiter=',')
+np.savetxt('time.txt',time,delimiter=',')
 
+print('done')
+
+"""
+ignore the following code for now
+"""
+
+'''
 """
 plot figure
 """
@@ -427,7 +435,7 @@ plt.legend(loc='best')
 
 plt.show()
 
-plots = 0
+plots = 0'''
 
 """
 ignore the following code for now
