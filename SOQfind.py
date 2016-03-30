@@ -37,8 +37,38 @@ p_2z = p_plot[:,5] #= p_2z
 p_1r = p_plot[:,6] #= p_1r
 p_2r = p_plot[:,7] #= p_2r
 
+print('S_plot[0,0:5] = ')
+print(S_plot[0,0:4])
+
+print('S_plot[0,4:8] = ')
+print(S_plot[0,4:8])
+
 print('S_plot[-1,0:5] = ')
 print(S_plot[-1,0:4])
 
 print('S_plot[-1,4:8] = ')
 print(S_plot[-1,4:8])
+
+print('time[0] = ')
+print(time[0])
+
+print('time[-1] = ')
+print(time[-1])
+
+print('root swap time')
+
+rswt = time[-1]/2
+
+print('rswt = ')
+print(rswt)
+
+index = rswt/.1
+
+print('index = ')
+print(index)
+
+print('S_plot[index,0:5] = ')
+print(S_plot[index,0:4])
+
+print('S_plot[index,4:8] = ')
+print(S_plot[index,4:8])

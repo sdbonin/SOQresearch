@@ -50,7 +50,7 @@ plt.ylabel('time')
 plt.legend(loc='best')
 
 plt.subplot(122)
-plt.plot(time,S_2r,label='S_12r',color='purple')
+plt.plot(time,S_2r,label='S_2r',color='purple')
 plt.plot(time,S_2x,label='S_2i',color='red')
 plt.plot(time,S_2y,label='S_2j',color='blue')
 plt.plot(time,S_2z,label='S_2k',color='green')
