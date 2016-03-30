@@ -4,9 +4,7 @@
 
 #### Add ignorible files here ###
 # SOQspin array files
-S_plot.txt
-p_plot.txt
-q_plot.txt
+*plot.txt
 time.txt
 junk.py
 #### don't alter stuff after this ###
