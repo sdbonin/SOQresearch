@@ -42,11 +42,12 @@ t0 <- initial time
 total plots <- the total number of plots, evenly distributed between t0 and totaltime
 """
 omega_0 = 1
-alpha = 0.001
+alpha = .001
 dt = .1
-totaltime = 1200
+totaltime = 511.2
 t0 = 0
-tolerance = .001
+tolerance = .01
+magtol = 1
 
 """
 arguments packages the omega_0 and alpha into a numpy array for use in integrable function SOQsys.
@@ -87,14 +88,14 @@ def normalize(q):
     Takes a 4x4 quaternion vector and normalizes it
     """
     q = np.array([q[0]])
-    print('q =')
-    print(q)
+    #print('q =')
+    #print(q)
     norm = 1/np.sqrt(q[0,0]**2+q[0,1]**2+q[0,2]**2+q[0,3]**2)
-    print('norm =')
-    print(norm)
+    #print('norm =')
+    #print(norm)
     q = norm*q
-    print('norm*q =')
-    print(q)
+    #print('norm*q =')
+    #print(q)
     normalizedq = quatreal(q)
     return normalizedq
 
@@ -165,7 +166,7 @@ def mag(q):
     """
     calculate magnitude of 4x4 real quaternion
     """
-    magnitude = np.sqrt(q[0,0]**2+q[0,1]**2+q[0,2]**2+q[0,3]**2)
+    magnitude = np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
     return magnitude
 
 def SOQsys(time,input,arguments):
@@ -227,8 +228,7 @@ define our integrator
 no jacobian
 max number of steps between each dt set to 100
 """
-runODE = ode(SOQsys).set_integrator('vode',method='bdf',with_jacobian=False,max_step=dt/100)
-runODE.set_initial_value(initialvalues,t0).set_f_params(arguments)
+
 
 i = 0
 
@@ -236,8 +236,10 @@ i = 0
 initialize spin matrices for plotting
 """
 
-S_1 = np.dot(conj(p_1),q_1)
-S_2 = np.dot(conj(p_2),q_2)
+S_1 = np.dot(p_1,q_1)
+S_2 = np.dot(p_2,q_2)
+S_1init=S_1
+S_2init=S_2
 
 S_1r = S_1[0,0]
 S_1x = S_1[0,1]
@@ -265,7 +267,7 @@ p_2r = p_2[0,0]
 p_2x = p_2[0,1]
 p_2y = p_2[0,2]
 p_2z = p_2[0,3]
-time = np.array([[0]])
+t_mat = np.array([[0]])
 
 """
 run scipy.integrate ODE solver
@@ -275,6 +277,9 @@ this can probably be greatly sped up, and now that the plot function has been mo
 this needs to be less hard coded
 """
 
+runODE = ode(SOQsys).set_integrator('vode',method='bdf',with_jacobian=False,max_step=dt/100,first_step=dt/1000,atol=1e-10,rtol=1e-10)
+runODE.set_initial_value(initialvalues,t0).set_f_params(arguments)
+
 while runODE.successful() and runODE.t<totaltime:
     #print("runODE.t = ",runODE.t)
     check = runODE.integrate(runODE.t+dt)
@@ -282,47 +287,72 @@ while runODE.successful() and runODE.t<totaltime:
     #print("check = ")
     #print(check)
     results = np.array([check])
+    
     q_1 = quatreal(np.array([results[0,0:4]]))
     q_2 = quatreal(np.array([results[0,4:8]]))
-    p_1 = quatreal(np.array([results[0,8:12]]))
     p_2 = quatreal(np.array([results[0,12:16]]))
-    S_1 = np.dot(conj(p_1),q_1)
-    S_2 = np.dot(conj(p_2),q_2)
-    #
-    S_1r = np.append(S_1r,S_1[0,0])
-    S_1x = np.append(S_1x,S_1[0,1])
-    S_1y = np.append(S_1y,S_1[0,2])
-    S_1z = np.append(S_1z,S_1[0,3])
-    S_2r = np.append(S_2r,S_2[0,0])
-    S_2x = np.append(S_2x,S_2[0,1])
-    S_2y = np.append(S_2y,S_2[0,2])
-    S_2z = np.append(S_2z,S_2[0,3])
-    #
-    q_1r = np.append(q_1r,q_1[0,0])
-    q_1x = np.append(q_1x,q_1[0,1])
-    q_1y = np.append(q_1y,q_1[0,2])
-    q_1z = np.append(q_1z,q_1[0,3])
-    q_2r = np.append(q_2r,q_2[0,0])
-    q_2x = np.append(q_2x,q_2[0,1])
-    q_2y = np.append(q_2y,q_2[0,2])
-    q_2z = np.append(q_2z,q_2[0,3])
-    #
-    p_1r = np.append(p_1r,p_1[0,0])
-    p_1x = np.append(p_1x,p_1[0,1])
-    p_1y = np.append(p_1y,p_1[0,2])
-    p_1z = np.append(p_1z,p_1[0,3])
-    p_2r = np.append(p_2r,p_2[0,0])
-    p_2x = np.append(p_2x,p_2[0,1])
-    p_2y = np.append(p_2y,p_2[0,2])
-    p_2z = np.append(p_2z,p_2[0,3])
-    time = np.append(time,runODE.t)
-    #
-    test1 = np.abs(S_1r[-1]-S_2r[0])
-    test2 = np.abs(S_1x[-1]-S_2x[0])
-    test3 = np.abs(S_1y[-1]-S_2y[0])
-    test4 = np.abs(S_1z[-1]-S_2z[0])
-    if test1<tolerance and test2<tolerance and test3<tolerance and test4<tolerance:
-        totaltime=runODE.t
+    p_1 = quatreal(np.array([results[0,8:12]]))
+    S_1 = np.dot(p_1,q_1)
+    S_2 = np.dot(p_2,q_2)
+    #test = np.abs(S_1[0,1]-S_2[0,1])
+    test1 = np.abs(S_1[0,0]-S_2init[0,0])
+    test2 = np.abs(S_1[0,1]-S_2init[0,1])
+    test3 = np.abs(S_1[0,2]-S_2init[0,2])
+    test4 = np.abs(S_1[0,3]-S_2init[0,3])
+    print('test1 = ',test1)
+    print('test2 = ',test2)
+    print('test3 = ',test3)
+    print('test4 = ',test4)
+    #print('test =',test)
+    '''print('mag(q_1) =',mag(q_1))
+    print('mag(p_1) =',mag(p_1))
+    print('mag(S_1) =',mag(S_1))
+    print('mag(q_2) =',mag(q_2))
+    print('mag(p_2) =',mag(p_2))
+    print('mag(S_2) =',mag(S_2))'''
+    print("runODE.t = ",runODE.t)
+    #if test < tolerance*2:
+    if test2<magtol or test3<magtol or test4<magtol:
+        S_1r = np.append(S_1r,S_1[0,0])
+        S_1x = np.append(S_1x,S_1[0,1])
+        S_1y = np.append(S_1y,S_1[0,2])
+        S_1z = np.append(S_1z,S_1[0,3])
+        S_2r = np.append(S_2r,S_2[0,0])
+        S_2x = np.append(S_2x,S_2[0,1])
+        S_2y = np.append(S_2y,S_2[0,2])
+        S_2z = np.append(S_2z,S_2[0,3])
+        #
+        q_1r = np.append(q_1r,q_1[0,0])
+        q_1x = np.append(q_1x,q_1[0,1])
+        q_1y = np.append(q_1y,q_1[0,2])
+        q_1z = np.append(q_1z,q_1[0,3])
+        q_2r = np.append(q_2r,q_2[0,0])
+        q_2x = np.append(q_2x,q_2[0,1])
+        q_2y = np.append(q_2y,q_2[0,2])
+        q_2z = np.append(q_2z,q_2[0,3])
+        #
+        p_1r = np.append(p_1r,p_1[0,0])
+        p_1x = np.append(p_1x,p_1[0,1])
+        p_1y = np.append(p_1y,p_1[0,2])
+        p_1z = np.append(p_1z,p_1[0,3])
+        p_2r = np.append(p_2r,p_2[0,0])
+        p_2x = np.append(p_2x,p_2[0,1])
+        p_2y = np.append(p_2y,p_2[0,2])
+        p_2z = np.append(p_2z,p_2[0,3])
+        t_mat = np.append(t_mat,runODE.t)
+        #
+        test1 = np.abs(S_1r[-1]-S_2init[0,0])
+        test2 = np.abs(S_1x[-1]-S_2init[0,1])
+        test3 = np.abs(S_1y[-1]-S_2init[0,2])
+        test4 = np.abs(S_1z[-1]-S_2init[0,3])
+        #testvalue = max(S_1r)
+        '''print('max(S_1r) = ',testvalue)
+        print('S_1r[-1] = ',S_1r[-1])
+        i=i+1'''
+       
+        #time.sleep(.5)
+        if test1<tolerance and test2<tolerance and test3<tolerance and test4<tolerance:
+            totaltime=runODE.t
 
     
 """
@@ -365,6 +395,6 @@ saves files to github directoy, but they're ignored by .gitignore
 np.savetxt('S_plot.txt',S_plot,delimiter=',')
 np.savetxt('q_plot.txt',q_plot,delimiter=',')
 np.savetxt('p_plot.txt',p_plot,delimiter=',')
-np.savetxt('time.txt',time,delimiter=',')
+np.savetxt('time.txt',t_mat,delimiter=',')
 
 print('done')
