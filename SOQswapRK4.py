@@ -141,30 +141,18 @@ dt = 0.01 #time step
 t  = 0
 print 'dt = ',dt
 
-q1a = []
-q2a = []
-p1a = []
-p2a = []
-s1a = []
-s2a = []
-
-t1a = []
-t2a = []
-
-q1m = []
-q2m = []
-p1m = []
-p2m = []
-S1 = [0,0]
-S2 = [0,0]
 
 
+q1a = [mat_vec(q1)]
+p1a = [mat_vec(p1)]
+s1a = [mat_vec(np.dot(qmatcon(p1),q1))]
+q2a = [mat_vec(q2)]
+p2a = [mat_vec(p2)]
+s2a = [mat_vec(np.dot(qmatcon(p2),q2))]
+time = [t]
 
 
-
-
-
-swaptime = 0.88/a #determined 'experimentally'
+swaptime = 0.8785/a #determined 'experimentally'
 
 
 
@@ -202,12 +190,12 @@ while t<swaptime:
     p2k2 = p1_dot(q2+q2k1*dt/2.,q1+q1k1*dt/2.,q2k1,q1k1,a,w)
     q1k3 = q1_dot(q1+q1k2*dt/2.,q2+q2k2*dt/2.,p1+p1k2*dt/2.,p2+p2k2*dt/2.,a)
     q2k3 = q1_dot(q2+q2k2*dt/2.,q1+q1k2*dt/2.,p2+p2k2*dt/2.,p1+p1k2*dt/2.,a)
-    p1k3 = p1_dot(q1+q1k2*dt/2.,q2+q2k2*dt/2.,q1k2,q2k2,a,w)
-    p2k3 = p1_dot(q2+q2k2*dt/2.,q1+q1k2*dt/2.,q2k2,q1k2,a,w)
+    p1k3 = p1_dot(q1+q1k2*dt/2.,q2+q2k2*dt/2.,q1k1,q2k1,a,w)
+    p2k3 = p1_dot(q2+q2k2*dt/2.,q1+q1k2*dt/2.,q2k1,q1k1,a,w)
     q1k4 = q1_dot(q1+q1k3*dt,q2+q2k3*dt,p1+p1k3*dt,p2+p2k3*dt,a)
     q2k4 = q1_dot(q2+q2k3*dt,q1+q1k3*dt,p2+p2k3*dt,p1+p1k3*dt,a)
-    p1k4 = p1_dot(q1+q1k3*dt,q2+q2k3*dt,q1k3,q2k3,a,w)
-    p2k4 = p1_dot(q2+q2k3*dt,q1+q1k3*dt,q2k3,q1k3,a,w)
+    p1k4 = p1_dot(q1+q1k3*dt,q2+q2k3*dt,q1k1,q2k1,a,w)
+    p2k4 = p1_dot(q2+q2k3*dt,q1+q1k3*dt,q2k1,q1k1,a,w)
     q1 += (q1k1 + 2*q1k2 + 2*q1k3 + q1k4)*dt/6.
     q2 += (q2k1 + 2*q2k2 + 2*q2k3 + q2k4)*dt/6.
     p1 += (p1k1 + 2*p1k2 + 2*p1k3 + p1k4)*dt/6.
@@ -215,27 +203,21 @@ while t<swaptime:
     t  += dt
     q1a.append(mat_vec(q1))
     p1a.append(mat_vec(p1))
-    q1m.append(qmatmagsqr(q1))
-    p1m.append(qmatmagsqr(p1))
     s1a.append(mat_vec(np.dot(qmatcon(p1),q1)))
-    t1a.append(t)
     q2a.append(mat_vec(q2))
     p2a.append(mat_vec(p2))
-    q2m.append(qmatmagsqr(q2))
-    p2m.append(qmatmagsqr(p2))
     s2a.append(mat_vec(np.dot(qmatcon(p2),q2)))
-    t2a.append(t)
+    time.append(t)
 
 runtime = checktime() - runtime
+
 q1a = np.array(q1a)
 q2a = np.array(q2a)
 p1a = np.array(p1a)
 p2a = np.array(p2a)
-t1a = np.array(t1a)
-t2a = np.array(t2a)
 s1a = np.array(s1a)
 s2a = np.array(s2a)
-#con = np.array(con)
+time = np.array(time)
 
 #------------------------------------------------------------------------------
 #                       Plotting things
@@ -265,12 +247,12 @@ def scalarplot(thing,time,name):
     plt.show()
 
 
-vecplot(q1a,t1a,'$q_1$')
-vecplot(q2a,t2a,'$q_2$')
-vecplot(p1a,t1a,'$p_1$')
-vecplot(p2a,t2a,'$p_2$')
-vecplot(s1a,t1a,'$p_1^{\dagger}q_1$')
-vecplot(s2a,t2a,'$p_2^{\dagger}q_2$')
+vecplot(q1a,time,'$q_1$')
+vecplot(q2a,time,'$q_2$')
+vecplot(p1a,time,'$p_1$')
+vecplot(p2a,time,'$p_2$')
+vecplot(s1a,time,'$p_1^{\dagger}q_1$')
+vecplot(s2a,time,'$p_2^{\dagger}q_2$')
 
 
 print 'Initial:'
