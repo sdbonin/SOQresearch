@@ -27,6 +27,7 @@ If you edit code or comments, please make sure to make a quick note of what you 
 
 import numpy as np
 from scipy.integrate import ode
+from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 import time
 from numpy import mod as mod
@@ -44,10 +45,11 @@ total plots <- the total number of plots, evenly distributed between t0 and tota
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = 511.2
+totaltime = 1000
 t0 = 0
 tolerance = .01
 magtol = 1
+realtol = 1e-8
 
 """
 arguments packages the omega_0 and alpha into a numpy array for use in integrable function SOQsys.
@@ -98,6 +100,13 @@ def normalize(q):
     #print(q)
     normalizedq = quatreal(q)
     return normalizedq
+    
+def mag(q):
+    """
+    calculate magnitude of 4x4 real quaternion
+    """
+    magnitude = np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
+    return magnitude    
 
 """
 initialize random q_1 and q_2
@@ -132,22 +141,40 @@ q_2 = normalize(q_2)
 initialize qdot_1 and qdot_2
 """
 
-qdot_1 = np.zeros((4,4))
-qdot_2 = np.zeros((4,4))
+#qdot_1 = np.zeros((4,4))
+#qdot_2 = np.zeros((4,4))
+
+qdot_1 = np.array([[0,-0.4,-0.5,-np.sqrt(1-(.4**2)-(.5**2))]])
+qdot_2 = np.array([[0,0.7,-0.7,-np.sqrt(1-(.7**2)-(.7**2))]])
+
+#qdot_1 = np.array([[0,-0.4,-0.5,-0.76811457478]])
+#qdot_2 = np.array([[0,0.7,-0.7,-0.14142135623]])
+
+qdot_1 = quatreal(qdot_1)
+qdot_2 = quatreal(qdot_2)
 
 """
 initialize p_1 and p_2
 p_# = [[0,real,real,real]]
 """
 
-p_1 = np.array([[0,-0.4,-0.5,-np.sqrt(1-(.4**2)-(.5**2))]])
-p_2 = np.array([[0,0.7,-0.7,-np.sqrt(1-(.7**2)-(.7**2))]])
+#p_1 = np.array([[0,-0.4,-0.5,-np.sqrt(1-(.4**2)-(.5**2))]])
+#p_2 = np.array([[0,0.7,-0.7,-np.sqrt(1-(.7**2)-(.7**2))]])
+
+p_1 = np.zeros((4,4))
+p_2 = np.zeros((4,4))
+
+#p_1 = qdot_1*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))+alpha*np.dot(np.dot(q_1,conj(q_2)),qdot_2)
+#p_2 = qdot_2*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))+alpha*np.dot(np.dot(q_2,conj(q_1)),qdot_1)
+
+#p_1 = qdot_1*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))
+#p_2 = qdot_2*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))
 
 p_1 = quatreal(p_1)
 p_2 = quatreal(p_2)
 
-p_1 = normalize(p_1)
-p_2 = normalize(p_2)
+#p_1 = normalize(p_1)
+#p_2 = normalize(p_2)
 
 """
 initialize pdots
@@ -159,27 +186,34 @@ pdot_2 = np.zeros((4,4))
 """
 repackage initial values into a numpy array for scipy.integrate
 """
-initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
+#initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0],qdot_1[0],qdot_2[0],pdot_1[0],pdot_2[0]])
+initialvalues = np.append(q_1[0],[q_2[0],qdot_1[0],qdot_2[0]])
+#initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
 
 
-def mag(q):
+'''def mag(q):
     """
     calculate magnitude of 4x4 real quaternion
     """
     magnitude = np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
-    return magnitude
+    return magnitude'''
 
-def SOQsys(time,input,arguments):
+def SOQsys(input,time,omega_0,alpha):
     """
     This is the system of first order ODEs we're solving
     """
     """
     initialize real matrices from input
     """
+    print('time = ',time)
     q_1 = quatreal(np.array([input[0:4]]))
     q_2 = quatreal(np.array([input[4:8]]))
     p_1 = quatreal(np.array([input[8:12]]))
     p_2 = quatreal(np.array([input[12:16]]))
+    '''qdot_1 = quatreal(np.array[input[16:20]])
+    qdot_2 = quatreal(np.array[input[20:24]])
+    pdot_1 = quatreal(np.array[input[24:28]])
+    pdot_2 = quatreal(np.array[input[28:32]])'''
     
     """
     pull out omega_0 and alpha from arguments
@@ -215,6 +249,7 @@ def SOQsys(time,input,arguments):
         p_2_dt = -(omega_0**2)*q_2 + alpha*dot2
         #
         output = np.append(q_1_dt[0],[q_2_dt[0],p_1_dt[0],p_2_dt[0]])
+        print('time = ',time)
     return output
     
 """
@@ -236,8 +271,8 @@ i = 0
 initialize spin matrices for plotting
 """
 
-S_1 = np.dot(p_1,q_1)
-S_2 = np.dot(p_2,q_2)
+S_1 = np.dot(conj(qdot_1),q_1)
+S_2 = np.dot(conj(qdot_2),q_2)
 S_1init=S_1
 S_2init=S_2
 
@@ -277,84 +312,97 @@ this can probably be greatly sped up, and now that the plot function has been mo
 this needs to be less hard coded
 """
 
-runODE = ode(SOQsys).set_integrator('vode',method='bdf',with_jacobian=False,max_step=dt/100,first_step=dt/1000,atol=1e-10,rtol=1e-10)
-runODE.set_initial_value(initialvalues,t0).set_f_params(arguments)
+"""
+the following is adapted from
+http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html#scipy.integrate.odeint
+"""
 
-while runODE.successful() and runODE.t<totaltime:
-    #print("runODE.t = ",runODE.t)
-    check = runODE.integrate(runODE.t+dt)
-    #print("runODE.integrate(runODE.t+dt) = ")
-    #print("check = ")
-    #print(check)
-    results = np.array([check])
-    
-    q_1 = quatreal(np.array([results[0,0:4]]))
-    q_2 = quatreal(np.array([results[0,4:8]]))
-    p_2 = quatreal(np.array([results[0,12:16]]))
-    p_1 = quatreal(np.array([results[0,8:12]]))
-    S_1 = np.dot(p_1,q_1)
-    S_2 = np.dot(p_2,q_2)
-    #test = np.abs(S_1[0,1]-S_2[0,1])
-    test1 = np.abs(S_1[0,0]-S_2init[0,0])
-    test2 = np.abs(S_1[0,1]-S_2init[0,1])
-    test3 = np.abs(S_1[0,2]-S_2init[0,2])
-    test4 = np.abs(S_1[0,3]-S_2init[0,3])
-    print('test1 = ',test1)
-    print('test2 = ',test2)
-    print('test3 = ',test3)
-    print('test4 = ',test4)
-    #print('test =',test)
-    '''print('mag(q_1) =',mag(q_1))
-    print('mag(p_1) =',mag(p_1))
-    print('mag(S_1) =',mag(S_1))
-    print('mag(q_2) =',mag(q_2))
-    print('mag(p_2) =',mag(p_2))
-    print('mag(S_2) =',mag(S_2))'''
-    print("runODE.t = ",runODE.t)
-    #if test < tolerance*2:
-    if test2<magtol or test3<magtol or test4<magtol:
-        S_1r = np.append(S_1r,S_1[0,0])
-        S_1x = np.append(S_1x,S_1[0,1])
-        S_1y = np.append(S_1y,S_1[0,2])
-        S_1z = np.append(S_1z,S_1[0,3])
-        S_2r = np.append(S_2r,S_2[0,0])
-        S_2x = np.append(S_2x,S_2[0,1])
-        S_2y = np.append(S_2y,S_2[0,2])
-        S_2z = np.append(S_2z,S_2[0,3])
-        #
-        q_1r = np.append(q_1r,q_1[0,0])
-        q_1x = np.append(q_1x,q_1[0,1])
-        q_1y = np.append(q_1y,q_1[0,2])
-        q_1z = np.append(q_1z,q_1[0,3])
-        q_2r = np.append(q_2r,q_2[0,0])
-        q_2x = np.append(q_2x,q_2[0,1])
-        q_2y = np.append(q_2y,q_2[0,2])
-        q_2z = np.append(q_2z,q_2[0,3])
-        #
-        p_1r = np.append(p_1r,p_1[0,0])
-        p_1x = np.append(p_1x,p_1[0,1])
-        p_1y = np.append(p_1y,p_1[0,2])
-        p_1z = np.append(p_1z,p_1[0,3])
-        p_2r = np.append(p_2r,p_2[0,0])
-        p_2x = np.append(p_2x,p_2[0,1])
-        p_2y = np.append(p_2y,p_2[0,2])
-        p_2z = np.append(p_2z,p_2[0,3])
-        t_mat = np.append(t_mat,runODE.t)
-        #
-        test1 = np.abs(S_1r[-1]-S_2init[0,0])
-        test2 = np.abs(S_1x[-1]-S_2init[0,1])
-        test3 = np.abs(S_1y[-1]-S_2init[0,2])
-        test4 = np.abs(S_1z[-1]-S_2init[0,3])
-        #testvalue = max(S_1r)
-        '''print('max(S_1r) = ',testvalue)
-        print('S_1r[-1] = ',S_1r[-1])
-        i=i+1'''
-       
-        #time.sleep(.5)
-        if test1<tolerance and test2<tolerance and test3<tolerance and test4<tolerance:
-            totaltime=runODE.t
+t = np.linspace(t0,totaltime,totaltime/dt)
+sol = odeint(SOQsys,initialvalues,t,args=(omega_0,alpha),rtol=1e-10,atol=1e-10)
+print('np.shape(sol) = ',np.shape(sol))
 
+import matplotlib.pyplot as plt
+plt.subplot(221)
+plt.plot(t, sol[:, 0], label='q_1r')
+plt.plot(t, sol[:, 1], label='q_1x')
+plt.plot(t, sol[:, 2], label='q_1y')
+plt.plot(t, sol[:, 3], label='q_1z')
+plt.legend(loc='best')
+plt.xlabel('t')
+plt.grid()
+
+plt.subplot(222)
+plt.plot(t, sol[:, 4], label='p_1r')
+plt.plot(t, sol[:, 5], label='p_1x')
+plt.plot(t, sol[:, 6], label='p_1y')
+plt.plot(t, sol[:, 7], label='p_1z')
+plt.legend(loc='best')
+plt.xlabel('t')
+plt.grid()
+
+solsize = np.int(totaltime/dt)
+print('solsize = ',solsize)
+i = 1
+
+S_1 = np.zeros((totaltime/dt,4))
+S_2 = np.zeros((totaltime/dt,4))
+
+print('qdot_1 = ',qdot_1)
+print('q_1 = ',q_1)
+S_1init = np.dot(conj(qdot_1),q_1)
+S_2init = np.dot(conj(qdot_2),q_2)
+
+S_1[0] = S_1init[0]
+S_2[0] = S_2init[0]
+
+while i < solsize:
+    q_1i = np.array([sol[i,0:4]])
+    p_1i = np.array([sol[i,8:12]])
+    q_1i = quatreal(q_1i)
+    p_1i = quatreal(p_1i)
+    S_1val = np.dot(conj(p_1i),q_1i)
+    S_1[i] = S_1val[0]
+    #
+    q_2i = np.array([sol[i,4:8]])
+    p_2i = np.array([sol[i,12:16]])
+    q_2i = quatreal(q_2i)
+    p_2i = quatreal(p_2i)
+    S_2val = np.dot(conj(p_2i),q_2i)
+    S_2[i] = S_2val[0]
+    i = i + 1
+    print(i)
+
+print('S_1[-1,:] =',S_1[-1,:])
+print('S_2[-1,:] =',S_2[-1,:])
+
+print('S_1[0,:] =',S_1[0,:])
+print('S_2[0,:] =',S_2[0,:])
+
+print('S_1.dtype = ',S_1.dtype)
+print('S_2.dtype = ',S_2.dtype)
+
+
+plt.subplot(223)
+plt.plot(t, S_1[:, 0], label='S_1r')
+plt.plot(t, S_1[:, 1], label='S_1x')
+plt.plot(t, S_1[:, 2], label='S_1y')
+plt.plot(t, S_1[:, 3], label='S_1z')
+plt.legend(loc='best')
+plt.xlabel('t')
+plt.grid()
+
+plt.subplot(224)
+plt.plot(t, S_2[:, 0], label='S_2r')
+plt.plot(t, S_2[:, 1], label='S_2x')
+plt.plot(t, S_2[:, 2], label='S_2y')
+plt.plot(t, S_2[:, 3], label='S_2z')
+plt.legend(loc='best')
+plt.xlabel('t')
+plt.grid()
+plt.show()
     
+    
+
 """
 create plotable matrices
 """

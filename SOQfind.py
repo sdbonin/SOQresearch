@@ -49,11 +49,17 @@ print(S_plot[1,0:4])
 print('S_plot[1,4:8] = ')
 print(S_plot[1,4:8])
 
-print('S_plot[-112:-1,0:5] = ')
-print(S_plot[-112:-1,0:4])
+'''print('S_plot[-112:,0:5] = ')
+print(S_plot[-112:,0:4])
 
-print('S_plot[-112:-1,4:8] = ')
-print(S_plot[-112:-1,4:8])
+print('S_plot[-112:,4:8] = ')
+print(S_plot[-112:,4:8])'''
+
+print('S_plot[49900:50000,0:5] = ')
+print(S_plot[49900:50000,0:4])
+
+print('S_plot[49900:50000,4:8] = ')
+print(S_plot[49900:50000,4:8])
 
 print('time[0] = ')
 print(time[0])
