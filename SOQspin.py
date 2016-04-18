@@ -23,6 +23,15 @@ SOQspin.py - sdbonin (comments are work in progress, cleaning up the code for ef
 Several variables are editable, should be located at the top of the code. I intend to make this more interactive from the command prompt.
 
 If you edit code or comments, please make sure to make a quick note of what you do when you sync it to Github.
+
+****Work List 4/18/2016****
+
+verify swap happens at t=1000 for alpha = 0.001, omega_0 = 1000 (for orthogonal intial spins?)
+    run integrator code for 1200, run through output backwards to find swap point
+
+add randomization for initial conditions (radomized q function complete)
+
+update commentary
 """
 
 import numpy as np
@@ -31,6 +40,7 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 import time
 from numpy import mod as mod
+import math
 
 """
 ************************
@@ -40,12 +50,11 @@ omega_0, alpha <- editable constants
 dt <- max time step for integrator
 totaltime <- total time integrator will run
 t0 <- initial time
-total plots <- the total number of plots, evenly distributed between t0 and totaltime
 """
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = 1000
+totaltime = 10
 t0 = 0
 tolerance = .01
 magtol = 1
@@ -56,7 +65,7 @@ arguments packages the omega_0 and alpha into a numpy array for use in integrabl
 """
 arguments = np.array([[omega_0, alpha]])
 
-np.random.seed(42)
+#np.random.seed(42)
 
 def quatreal(q):
     """
@@ -106,7 +115,20 @@ def mag(q):
     calculate magnitude of 4x4 real quaternion
     """
     magnitude = np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
-    return magnitude    
+    return magnitude
+    
+def randq():
+    """
+    From "Generating a random element of SO(3), Steven M. LaValle"
+    """
+    u = np.random.random((1,3))
+    h = np.zeros((1,4))
+    h[0,0] = np.sin(2*math.pi*u[0,1])*np.sqrt(1-u[0,0])
+    h[0,1] = np.cos(2*math.pi*u[0,1])*np.sqrt(1-u[0,0])
+    h[0,2] = np.sin(2*math.pi*u[0,2])*np.sqrt(u[0,0])
+    h[0,3] = np.cos(2*math.pi*u[0,2])*np.sqrt(u[0,0])
+    return h
+        
 
 """
 initialize random q_1 and q_2
@@ -121,6 +143,9 @@ q_2 = quatreal(qvec_2)
 """
 initialize variables q_1 and q_2
 """
+
+qtest = randq()
+print('qtest = ',qtest)
 
 q_1 = np.array([[1,0,0,0]])
 q_2 = np.array([[1,0,0,0]])
@@ -205,7 +230,7 @@ def SOQsys(input,time,omega_0,alpha):
     """
     initialize real matrices from input
     """
-    print('time = ',time)
+    #print('time = ',time)
     q_1 = quatreal(np.array([input[0:4]]))
     q_2 = quatreal(np.array([input[4:8]]))
     p_1 = quatreal(np.array([input[8:12]]))
@@ -249,22 +274,12 @@ def SOQsys(input,time,omega_0,alpha):
         p_2_dt = -(omega_0**2)*q_2 + alpha*dot2
         #
         output = np.append(q_1_dt[0],[q_2_dt[0],p_1_dt[0],p_2_dt[0]])
-        print('time = ',time)
+        #print('time = ',time)
     return output
     
 """
 Let me know if the way I'm interpreting how this integrator works is incorrect
 """
-
-"""
-define our integrator 
-"vode" for a real system of ODE'set'
-"bdf" instead of "adams" for stiff functions
-no jacobian
-max number of steps between each dt set to 100
-"""
-
-
 i = 0
 
 """
@@ -321,7 +336,7 @@ t = np.linspace(t0,totaltime,totaltime/dt)
 sol = odeint(SOQsys,initialvalues,t,args=(omega_0,alpha),rtol=1e-10,atol=1e-10)
 print('np.shape(sol) = ',np.shape(sol))
 
-import matplotlib.pyplot as plt
+
 plt.subplot(221)
 plt.plot(t, sol[:, 0], label='q_1r')
 plt.plot(t, sol[:, 1], label='q_1x')
@@ -370,7 +385,7 @@ while i < solsize:
     S_2val = np.dot(conj(p_2i),q_2i)
     S_2[i] = S_2val[0]
     i = i + 1
-    print(i)
+    #print(i)
 
 print('S_1[-1,:] =',S_1[-1,:])
 print('S_2[-1,:] =',S_2[-1,:])
