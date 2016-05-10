@@ -24,14 +24,24 @@ Several variables are editable, should be located at the top of the code. I inte
 
 If you edit code or comments, please make sure to make a quick note of what you do when you sync it to Github.
 
-****Work List 4/18/2016****
+****Work List 5/10/2016****
 
-verify swap happens at t=1000 for alpha = 0.001, omega_0 = 1000 (for orthogonal intial spins?)
-    run integrator code for 1200, run through output backwards to find swap point
+continue to update commentary
 
-add randomization for initial conditions (radomized q function complete)
+remove unnecessary editables
 
-update commentary
+clean up "dot" variables
+
+From Dr. Wharton...
+
+Key questions:
+
+1) As the initial random seed for q_0 varies, how does this change the behavior of the evolution of s?  (Both Re(s) and Im(s).)
+
+2) As the initial spin directions become more aligned, does the magnitude of the variation of Re(s) start to drop? (And vice-versa: as they become more opposite, does the magnitude increase?)
+
+3) Does the quantity Re(s)^2+L^2 vary smoothly (here L is just half of |qdot|^2-|q|^2.)?
+
 """
 
 import numpy as np
@@ -54,18 +64,19 @@ t0 <- initial time
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = 10
+totaltime = 1000
 t0 = 0
 tolerance = .01
 magtol = 1
 realtol = 1e-8
+watchthis = 1e-17
 
 """
 arguments packages the omega_0 and alpha into a numpy array for use in integrable function SOQsys.
 """
 arguments = np.array([[omega_0, alpha]])
 
-#np.random.seed(42)
+np.random.seed(1268)
 
 def quatreal(q):
     """
@@ -98,16 +109,15 @@ def normalize(q):
     """
     Takes a 4x4 quaternion vector and normalizes it
     """
-    q = np.array([q[0]])
-    #print('q =')
-    #print(q)
-    norm = 1/np.sqrt(q[0,0]**2+q[0,1]**2+q[0,2]**2+q[0,3]**2)
-    #print('norm =')
-    #print(norm)
-    q = norm*q
-    #print('norm*q =')
-    #print(q)
-    normalizedq = quatreal(q)
+    quaternion = q[0]
+    norm = 1/np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
+    #q = norm*q
+    print('norm =', norm)
+    q[0,0] = norm*q[0,0]
+    q[0,1] = norm*q[0,1]
+    q[0,2] = norm*q[0,2]
+    q[0,3] = norm*q[0,3]
+    normalizedq = q
     return normalizedq
     
 def mag(q):
@@ -128,121 +138,70 @@ def randq():
     h[0,2] = np.sin(2*math.pi*u[0,2])*np.sqrt(u[0,0])
     h[0,3] = np.cos(2*math.pi*u[0,2])*np.sqrt(u[0,0])
     return h
-        
+    
+unitquaternion = quatreal(np.ones((1,4)))
 
 """
 initialize random q_1 and q_2
 """
 
-'''qvec_1 = 1*np.random.randn(1,4)
-qvec_2 = 1*np.random.randn(1,4)
-q_1 = quatreal(qvec_1)
-q_2 = quatreal(qvec_2)
-'''
-
-"""
-initialize variables q_1 and q_2
-"""
-
-qtest = randq()
-print('qtest = ',qtest)
-
-q_1 = np.array([[1,0,0,0]])
-q_2 = np.array([[1,0,0,0]])
+q_1 = randq()
+q_2 = randq()
 
 q_1 = quatreal(q_1)
 q_2 = quatreal(q_2)
 
 
 """
-normalize q
+initialize random S_1 and S_1
 """
 
-q_1 = normalize(q_1)
-q_2 = normalize(q_2)
+S_1 = quatreal(randq())
+S_2 = quatreal(randq())
 
-
-"""
-initialize qdot_1 and qdot_2
-"""
-
-#qdot_1 = np.zeros((4,4))
-#qdot_2 = np.zeros((4,4))
-
-qdot_1 = np.array([[0,-0.4,-0.5,-np.sqrt(1-(.4**2)-(.5**2))]])
-qdot_2 = np.array([[0,0.7,-0.7,-np.sqrt(1-(.7**2)-(.7**2))]])
-
-#qdot_1 = np.array([[0,-0.4,-0.5,-0.76811457478]])
-#qdot_2 = np.array([[0,0.7,-0.7,-0.14142135623]])
-
-qdot_1 = quatreal(qdot_1)
-qdot_2 = quatreal(qdot_2)
+S_1initial = S_1
+S_2initial = S_2
 
 """
 initialize p_1 and p_2
-p_# = [[0,real,real,real]]
 """
 
-#p_1 = np.array([[0,-0.4,-0.5,-np.sqrt(1-(.4**2)-(.5**2))]])
-#p_2 = np.array([[0,0.7,-0.7,-np.sqrt(1-(.7**2)-(.7**2))]])
+qdot_1 = np.dot(q_1,conj(S_1))
+qdot_2 = np.dot(q_2,conj(S_2))
 
-p_1 = np.zeros((4,4))
-p_2 = np.zeros((4,4))
 
-#p_1 = qdot_1*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))+alpha*np.dot(np.dot(q_1,conj(q_2)),qdot_2)
-#p_2 = qdot_2*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))+alpha*np.dot(np.dot(q_2,conj(q_1)),qdot_1)
-
-#p_1 = qdot_1*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))
-#p_2 = qdot_2*(1-(alpha**2)*(mag(q_1)**2)*(mag(q_2)**2))
-
-p_1 = quatreal(p_1)
-p_2 = quatreal(p_2)
-
+dot1 = np.dot(conj(q_2),q_1)
+dot2 = np.dot(dot1,qdot_2)
+p_1 = qdot_1 + alpha*dot2
 #p_1 = normalize(p_1)
+
+dot1 = np.dot(conj(q_1),q_2)
+dot2 = np.dot(dot1,qdot_1)
+p_2 = qdot_2 + alpha*dot2
 #p_2 = normalize(p_2)
 
-"""
-initialize pdots
-"""
-
-pdot_1 = np.zeros((4,4))
-pdot_2 = np.zeros((4,4))
 
 """
 repackage initial values into a numpy array for scipy.integrate
 """
-#initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0],qdot_1[0],qdot_2[0],pdot_1[0],pdot_2[0]])
-initialvalues = np.append(q_1[0],[q_2[0],qdot_1[0],qdot_2[0]])
-#initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
+
+initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
 
 
-'''def mag(q):
-    """
-    calculate magnitude of 4x4 real quaternion
-    """
-    magnitude = np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
-    return magnitude'''
-
-def SOQsys(input,time,omega_0,alpha):
+def SOQsys(input,t,omega_0,alpha):
     """
     This is the system of first order ODEs we're solving
     """
     """
     initialize real matrices from input
     """
-    #print('time = ',time)
+    #print('time = ', t)
+    #
     q_1 = quatreal(np.array([input[0:4]]))
     q_2 = quatreal(np.array([input[4:8]]))
     p_1 = quatreal(np.array([input[8:12]]))
     p_2 = quatreal(np.array([input[12:16]]))
-    '''qdot_1 = quatreal(np.array[input[16:20]])
-    qdot_2 = quatreal(np.array[input[20:24]])
-    pdot_1 = quatreal(np.array[input[24:28]])
-    pdot_2 = quatreal(np.array[input[28:32]])'''
-    
-    """
-    pull out omega_0 and alpha from arguments
-    """
+    #
     omega_0 = arguments[0,0]
     alpha = arguments[0,1]
     """
@@ -255,23 +214,23 @@ def SOQsys(input,time,omega_0,alpha):
     if denominator == 0:
         output = "failure"
     else:
-        dot1 = np.dot(q_1,conj(q_2))
+        dot1 = np.dot(conj(q_2),q_1)
         dot2 = np.dot(dot1,p_2)
         top1 = p_1 - alpha*dot2
         q_1_dt = top1*(1/denominator)
         #
-        dot1 = np.dot(q_2,conj(q_1))
+        dot1 = np.dot(conj(q_1),q_2)
         dot2 = np.dot(dot1,p_1)
         top2 = p_2 - alpha*dot2
         q_2_dt = top2*(1/denominator)
         #
-        dot1 = np.dot(q_1_dt,conj(q_2_dt))
-        dot2 = np.dot(dot1,q_2)
-        p_1_dt = -(omega_0**2)*q_1 + alpha*dot2
+        dot1 = np.dot(q_2,q_1_dt)
+        dot2 = np.dot(dot1,conj(q_2_dt))
+        p_1_dt =  -q_1 + 2*alpha*dot2
         #
-        dot1 = np.dot(q_2_dt,conj(q_1_dt))
-        dot2 = np.dot(dot1,q_1)
-        p_2_dt = -(omega_0**2)*q_2 + alpha*dot2
+        dot1 = np.dot(q_1,q_2_dt)
+        dot2 = np.dot(dot1,conj(q_1_dt))
+        p_2_dt =  -q_2 + 2*alpha*dot2
         #
         output = np.append(q_1_dt[0],[q_2_dt[0],p_1_dt[0],p_2_dt[0]])
         #print('time = ',time)
@@ -286,12 +245,12 @@ i = 0
 initialize spin matrices for plotting
 """
 
-S_1 = np.dot(conj(qdot_1),q_1)
-S_2 = np.dot(conj(qdot_2),q_2)
+#S_1 = np.dot(conj(qdot_1),q_1)
+#S_2 = np.dot(conj(qdot_2),q_2)
 S_1init=S_1
 S_2init=S_2
 
-S_1r = S_1[0,0]
+'''S_1r = S_1[0,0]
 S_1x = S_1[0,1]
 S_1y = S_1[0,2]
 S_1z = S_1[0,3]
@@ -317,7 +276,7 @@ p_2r = p_2[0,0]
 p_2x = p_2[0,1]
 p_2y = p_2[0,2]
 p_2z = p_2[0,3]
-t_mat = np.array([[0]])
+t_mat = np.array([[0]])'''
 
 """
 run scipy.integrate ODE solver
@@ -335,7 +294,6 @@ http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html#
 t = np.linspace(t0,totaltime,totaltime/dt)
 sol = odeint(SOQsys,initialvalues,t,args=(omega_0,alpha),rtol=1e-10,atol=1e-10)
 print('np.shape(sol) = ',np.shape(sol))
-
 
 plt.subplot(221)
 plt.plot(t, sol[:, 0], label='q_1r')
@@ -359,30 +317,53 @@ solsize = np.int(totaltime/dt)
 print('solsize = ',solsize)
 i = 1
 
+print('q_1 = ',q_1)
+S_1init = S_1
+S_2init = S_2
+
 S_1 = np.zeros((totaltime/dt,4))
 S_2 = np.zeros((totaltime/dt,4))
 
-print('qdot_1 = ',qdot_1)
-print('q_1 = ',q_1)
-S_1init = np.dot(conj(qdot_1),q_1)
-S_2init = np.dot(conj(qdot_2),q_2)
+S_1[0] = S_1initial[0]
+S_2[0] = S_2initial[0]
 
-S_1[0] = S_1init[0]
-S_2[0] = S_2init[0]
+'''dot1 = np.dot(q_1,conj(q_2))
+dot2 = np.dot(dot1,qdot_2)
+p_1 = qdot_1 - alpha*dot2
+
+dot1 = np.dot(q_2,conj(q_1))
+dot2 = np.dot(dot1,qdot_1)
+p_2 = qdot_2 - alpha*dot2'''
 
 while i < solsize:
     q_1i = np.array([sol[i,0:4]])
     p_1i = np.array([sol[i,8:12]])
     q_1i = quatreal(q_1i)
     p_1i = quatreal(p_1i)
-    S_1val = np.dot(conj(p_1i),q_1i)
-    S_1[i] = S_1val[0]
     #
     q_2i = np.array([sol[i,4:8]])
     p_2i = np.array([sol[i,12:16]])
     q_2i = quatreal(q_2i)
     p_2i = quatreal(p_2i)
-    S_2val = np.dot(conj(p_2i),q_2i)
+    #
+    denominator = 1-(alpha**2)*((mag(q_1i)**2)*(mag(q_2i)**2))
+    #
+    dot1 = np.dot(conj(q_2i),q_1i)
+    dot2 = np.dot(dot1,p_2i)
+    top1 = p_1i - alpha*dot2
+    q_1i_dt = top1*(1/denominator)
+    #
+    dot1 = np.dot(conj(q_1i),q_2i)
+    dot2 = np.dot(dot1,p_1i)
+    top2 = p_2i - alpha*dot2
+    q_2i_dt = top2*(1/denominator)
+    #
+    S_1val = np.dot(conj(q_1i_dt),q_1i)
+    #
+    S_1[i] = S_1val[0]
+    #
+    S_2val = np.dot(conj(q_2i_dt),q_2i)
+    #
     S_2[i] = S_2val[0]
     i = i + 1
     #print(i)
@@ -404,6 +385,8 @@ plt.plot(t, S_1[:, 2], label='S_1y')
 plt.plot(t, S_1[:, 3], label='S_1z')
 plt.legend(loc='best')
 plt.xlabel('t')
+axes = plt.gca()
+axes.set_ylim([-2,2])
 plt.grid()
 
 plt.subplot(224)
@@ -413,6 +396,8 @@ plt.plot(t, S_2[:, 2], label='S_2y')
 plt.plot(t, S_2[:, 3], label='S_2z')
 plt.legend(loc='best')
 plt.xlabel('t')
+axes = plt.gca()
+axes.set_ylim([-2,2])
 plt.grid()
 plt.show()
     
@@ -421,7 +406,7 @@ plt.show()
 """
 create plotable matrices
 """
-S_plot = np.zeros((S_1x.size,8))
+'''S_plot = np.zeros((S_1x.size,8))
 S_plot[:,0] = S_1r
 S_plot[:,1] = S_1x
 S_plot[:,2] = S_1y
@@ -460,4 +445,4 @@ np.savetxt('q_plot.txt',q_plot,delimiter=',')
 np.savetxt('p_plot.txt',p_plot,delimiter=',')
 np.savetxt('time.txt',t_mat,delimiter=',')
 
-print('done')
+print('done')'''
