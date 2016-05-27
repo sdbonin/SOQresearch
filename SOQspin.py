@@ -32,16 +32,6 @@ remove unnecessary editables
 
 clean up "dot" variables
 
-From Dr. Wharton...
-
-Key questions:
-
-1) As the initial random seed for q_0 varies, how does this change the behavior of the evolution of s?  (Both Re(s) and Im(s).)
-
-2) As the initial spin directions become more aligned, does the magnitude of the variation of Re(s) start to drop? (And vice-versa: as they become more opposite, does the magnitude increase?)
-
-3) Does the quantity Re(s)^2+L^2 vary smoothly (here L is just half of |qdot|^2-|q|^2.)?
-
 """
 
 import numpy as np
@@ -64,7 +54,8 @@ t0 <- initial time
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = 1000
+totaltime = 10
+diff = 10
 t0 = 0
 tolerance = .01
 magtol = 1
@@ -76,7 +67,7 @@ arguments packages the omega_0 and alpha into a numpy array for use in integrabl
 """
 arguments = np.array([[omega_0, alpha]])
 
-np.random.seed(1268)
+#np.random.seed(4949)
 
 def quatreal(q):
     """
@@ -132,6 +123,7 @@ def randq():
     From "Generating a random element of SO(3), Steven M. LaValle"
     """
     u = np.random.random((1,3))
+    print("u =",u)
     h = np.zeros((1,4))
     h[0,0] = np.sin(2*math.pi*u[0,1])*np.sqrt(1-u[0,0])
     h[0,1] = np.cos(2*math.pi*u[0,1])*np.sqrt(1-u[0,0])
@@ -139,28 +131,72 @@ def randq():
     h[0,3] = np.cos(2*math.pi*u[0,2])*np.sqrt(u[0,0])
     return h
     
-unitquaternion = quatreal(np.ones((1,4)))
+def randImS():
+    """
+    From "Generating a random element of SO(3), Steven M. LaValle"
+    """
+    u = 2*np.random.random()-1
+    print("u =",u)
+    theta = 2*math.pi*np.random.random()
+    print("theta =",theta)
+    h = np.zeros((1,4))
+    #h[0,0] = np.sin(2*math.pi*u[0,1])*np.sqrt(1-u[0,0])
+    h[0,1] = np.cos(theta)*np.sqrt(1-u**2)
+    h[0,2] = np.sin(theta)*np.sqrt(1-u**2)
+    h[0,3] = u
+    return h
+
+def quatdot(q_1,q_2):
+    """dot product of 2 quaternions"""
+    dot = np.zeros((1,4))
+    dot = q_1[0,0]*q_2[0,0] + q_1[0,1]*q_2[0,1] + q_1[0,2]*q_2[0,2] + q_1[0,3]*q_2[0,3]
+    return dot
 
 """
 initialize random q_1 and q_2
 """
 
-q_1 = randq()
-q_2 = randq()
-
-q_1 = quatreal(q_1)
-q_2 = quatreal(q_2)
-
+'''q_1 = quatreal(randq())
+q_2 = quatreal(randq())'''
 
 """
 initialize random S_1 and S_1
 """
-
 S_1 = quatreal(randq())
+print("S_1 = ",S_1)
 S_2 = quatreal(randq())
+print("S_2 = ",S_2)
 
-S_1initial = S_1
-S_2initial = S_2
+
+"""find a,b,c"""
+
+rotAxis = np.zeros((1,4))
+Sdots = np.dot(S_1,S_2)
+rotAxis[0,1:4] = Sdots[0,1:4]
+
+v = normalize(quatreal(rotAxis))
+
+theta = 2*np.arccos(quatdot(S_1,S_2))
+print("theta = ", theta)
+
+c = np.zeros((1,4))
+c[0,0] = np.cos(theta/2)
+c[0,1] = -v[0,1]*np.sin(theta/2)
+c[0,2] = -v[0,2]*np.sin(theta/2)
+c[0,3] = -v[0,3]*np.sin(theta/2)
+c = quatreal(c)
+print("c = ",c)
+
+dot = np.dot(c,S_2)
+check = np.dot(dot,conj(c))
+print("check = ",check)
+print("-S_1 = ",-S_1)
+
+a = randImS()
+b = np.dot(a,c)
+
+q_1 = a
+q_2 = b
 
 """
 initialize p_1 and p_2
@@ -169,18 +205,12 @@ initialize p_1 and p_2
 qdot_1 = np.dot(q_1,conj(S_1))
 qdot_2 = np.dot(q_2,conj(S_2))
 
+p_1 = qdot_1 + 2*alpha*(mag(qdot_1+qdot_2)**2)*(qdot_1-qdot_2)
 
-dot1 = np.dot(conj(q_2),q_1)
-dot2 = np.dot(dot1,qdot_2)
-p_1 = qdot_1 + alpha*dot2
-#p_1 = normalize(p_1)
+p_2 = qdot_2 + 2*alpha*(mag(qdot_1+qdot_2)**2)*(qdot_2-qdot_1)
 
-dot1 = np.dot(conj(q_1),q_2)
-dot2 = np.dot(dot1,qdot_1)
-p_2 = qdot_2 + alpha*dot2
-#p_2 = normalize(p_2)
-
-
+S_1initial = S_1
+S_2initial = S_2
 """
 repackage initial values into a numpy array for scipy.integrate
 """
@@ -208,31 +238,24 @@ def SOQsys(input,t,omega_0,alpha):
     matrix operations
     """
     #denominator = 1
-    denominator = 1-(alpha**2)*((mag(q_1)**2)*(mag(q_2)**2))
+    denominator = 1+(4*alpha)*(mag(q_1+q_2)**2)
     #print("denominator =")
     #print(denominator)
     if denominator == 0:
         output = "failure"
     else:
-        dot1 = np.dot(conj(q_2),q_1)
-        dot2 = np.dot(dot1,p_2)
-        top1 = p_1 - alpha*dot2
-        q_1_dt = top1*(1/denominator)
         #
-        dot1 = np.dot(conj(q_1),q_2)
-        dot2 = np.dot(dot1,p_1)
-        top2 = p_2 - alpha*dot2
-        q_2_dt = top2*(1/denominator)
+        numerator = p_1 + 2*alpha*(mag(q_1+q_2)**2)*(p_1+p_2)
+        q_1dot = numerator*(1/denominator)
         #
-        dot1 = np.dot(q_2,q_1_dt)
-        dot2 = np.dot(dot1,conj(q_2_dt))
-        p_1_dt =  -q_1 + 2*alpha*dot2
+        numerator = p_2 + 2*alpha*(mag(q_1+q_2)**2)*(p_1+p_2)
+        q_2dot = numerator*(1/denominator)
         #
-        dot1 = np.dot(q_1,q_2_dt)
-        dot2 = np.dot(dot1,conj(q_1_dt))
-        p_2_dt =  -q_2 + 2*alpha*dot2
+        p_1dot = -q_1+2*alpha*(mag(q_1dot-q_2dot)**2)*(q_1+q_2)
         #
-        output = np.append(q_1_dt[0],[q_2_dt[0],p_1_dt[0],p_2_dt[0]])
+        p_2dot = -q_2+2*alpha*(mag(q_2dot-q_1dot)**2)*(q_1+q_2)
+        #
+        output = np.append(q_1dot[0],[q_2dot[0],p_1dot[0],p_2dot[0]])
         #print('time = ',time)
     return output
     
@@ -295,7 +318,7 @@ t = np.linspace(t0,totaltime,totaltime/dt)
 sol = odeint(SOQsys,initialvalues,t,args=(omega_0,alpha),rtol=1e-10,atol=1e-10)
 print('np.shape(sol) = ',np.shape(sol))
 
-plt.subplot(221)
+'''plt.subplot(221)
 plt.plot(t, sol[:, 0], label='q_1r')
 plt.plot(t, sol[:, 1], label='q_1x')
 plt.plot(t, sol[:, 2], label='q_1y')
@@ -311,7 +334,7 @@ plt.plot(t, sol[:, 6], label='p_1y')
 plt.plot(t, sol[:, 7], label='p_1z')
 plt.legend(loc='best')
 plt.xlabel('t')
-plt.grid()
+plt.grid()'''
 
 solsize = np.int(totaltime/dt)
 print('solsize = ',solsize)
@@ -323,9 +346,18 @@ S_2init = S_2
 
 S_1 = np.zeros((totaltime/dt,4))
 S_2 = np.zeros((totaltime/dt,4))
+S_error = np.zeros((totaltime/dt,4))
+S_erVec = np.zeros((totaltime/dt,4))
+cons_1 = np.zeros((totaltime/dt,1))
+cons_2 = np.zeros((totaltime/dt,1))
 
 S_1[0] = S_1initial[0]
 S_2[0] = S_2initial[0]
+S_error[0] = S_1initial[0]-S_2initial[0]
+print("S_error[0] =",S_error[0])
+S_erVec[0] = mag(quatreal(np.array([S_error[0]])))
+cons_1[0] = 0
+cons_2[0] = 0
 
 '''dot1 = np.dot(q_1,conj(q_2))
 dot2 = np.dot(dot1,qdot_2)
@@ -346,25 +378,39 @@ while i < solsize:
     q_2i = quatreal(q_2i)
     p_2i = quatreal(p_2i)
     #
-    denominator = 1-(alpha**2)*((mag(q_1i)**2)*(mag(q_2i)**2))
+    denominator = 1+(4*alpha)*(mag(q_1i+q_2i)**2)
     #
-    dot1 = np.dot(conj(q_2i),q_1i)
-    dot2 = np.dot(dot1,p_2i)
-    top1 = p_1i - alpha*dot2
-    q_1i_dt = top1*(1/denominator)
+    numerator = p_1i + 2*alpha*(mag(q_1i+q_2i)**2)*(p_1i+p_2i)
+    q_1idot = numerator*(1/denominator)
     #
-    dot1 = np.dot(conj(q_1i),q_2i)
-    dot2 = np.dot(dot1,p_1i)
-    top2 = p_2i - alpha*dot2
-    q_2i_dt = top2*(1/denominator)
+    numerator = p_2i + 2*alpha*(mag(q_1i+q_2i)**2)*(p_1i+p_2i)
+    q_2idot = numerator*(1/denominator)
     #
-    S_1val = np.dot(conj(q_1i_dt),q_1i)
+    S_1val = np.dot(conj(q_1idot),q_1i)
+    #print('S_1val =',S_1val)
     #
     S_1[i] = S_1val[0]
     #
-    S_2val = np.dot(conj(q_2i_dt),q_2i)
+    S_2val = np.dot(conj(q_2idot),q_2i)
     #
     S_2[i] = S_2val[0]
+    #
+    Sreal_1 = S_1val[0,0]
+    Sreal_2 = S_2val[0,0]
+    #print('Sreal_1 =',Sreal_1)
+    #
+    L_1 = 0.5*(mag(q_1idot)**2 - mag(q_1i)**2)
+    L_2 = 0.5*(mag(q_2idot)**2 - mag(q_2i)**2)
+    #print('L_1 =',L_1)
+    #
+    cons_1[i] = np.sqrt((L_1**2) + Sreal_1**2)
+    cons_2[i] = np.sqrt((L_2**2) + Sreal_2**2)
+    #
+    cons_2[i]
+    #
+    S_error[i] = S_1[i] - S_2[i]
+    S_erVec[i] = mag(quatreal(np.array([S_error[i]])))
+    #
     i = i + 1
     #print(i)
 
@@ -377,8 +423,28 @@ print('S_2[0,:] =',S_2[0,:])
 print('S_1.dtype = ',S_1.dtype)
 print('S_2.dtype = ',S_2.dtype)
 
+plt.subplot(221)
+plt.plot(t, S_error[:, 0], label='Serr_r')
+plt.plot(t, S_error[:, 1], label='Serr_x')
+plt.plot(t, S_error[:, 2], label='Serr_y')
+plt.plot(t, S_error[:, 3], label='Serr_z')
+plt.legend(loc='best')
+plt.xlabel('t')
+axes = plt.gca()
+axes.set_xlim([0,diff])
+plt.grid()
+
+plt.subplot(222)
+plt.plot(t, S_erVec[:, 0], label='mag')
+plt.legend(loc='best')
+plt.xlabel('t')
+axes = plt.gca()
+axes.set_xlim([0,diff])
+plt.grid()
+
 
 plt.subplot(223)
+plt.plot(t, cons_1[:], label='cons_1')
 plt.plot(t, S_1[:, 0], label='S_1r')
 plt.plot(t, S_1[:, 1], label='S_1x')
 plt.plot(t, S_1[:, 2], label='S_1y')
@@ -387,9 +453,11 @@ plt.legend(loc='best')
 plt.xlabel('t')
 axes = plt.gca()
 axes.set_ylim([-2,2])
+axes.set_xlim([totaltime-diff,totaltime])
 plt.grid()
 
 plt.subplot(224)
+plt.plot(t, cons_2[:], label='cons_2')
 plt.plot(t, S_2[:, 0], label='S_2r')
 plt.plot(t, S_2[:, 1], label='S_2x')
 plt.plot(t, S_2[:, 2], label='S_2y')
@@ -398,6 +466,7 @@ plt.legend(loc='best')
 plt.xlabel('t')
 axes = plt.gca()
 axes.set_ylim([-2,2])
+axes.set_xlim([0,diff])
 plt.grid()
 plt.show()
     
