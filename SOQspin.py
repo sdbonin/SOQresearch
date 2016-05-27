@@ -54,8 +54,11 @@ t0 <- initial time
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = 10
-diff = 10
+totaltime = 5000
+
+"""For a normal plot set totaltime and diff equal to eachother"""
+
+diff = 5000
 t0 = 0
 tolerance = .01
 magtol = 1
@@ -156,8 +159,8 @@ def quatdot(q_1,q_2):
 initialize random q_1 and q_2
 """
 
-'''q_1 = quatreal(randq())
-q_2 = quatreal(randq())'''
+q_1 = quatreal(randq())
+q_2 = quatreal(randq())
 
 """
 initialize random S_1 and S_1
@@ -170,7 +173,7 @@ print("S_2 = ",S_2)
 
 """find a,b,c"""
 
-rotAxis = np.zeros((1,4))
+'''rotAxis = np.zeros((1,4))
 Sdots = np.dot(S_1,S_2)
 rotAxis[0,1:4] = Sdots[0,1:4]
 
@@ -196,7 +199,7 @@ a = randImS()
 b = np.dot(a,c)
 
 q_1 = a
-q_2 = b
+q_2 = b'''
 
 """
 initialize p_1 and p_2
@@ -205,9 +208,9 @@ initialize p_1 and p_2
 qdot_1 = np.dot(q_1,conj(S_1))
 qdot_2 = np.dot(q_2,conj(S_2))
 
-p_1 = qdot_1 + 2*alpha*(mag(qdot_1+qdot_2)**2)*(qdot_1-qdot_2)
+p_1 = qdot_1 + 2*alpha*(mag(q_1+q_2)**2)*(qdot_1-qdot_2)
 
-p_2 = qdot_2 + 2*alpha*(mag(qdot_1+qdot_2)**2)*(qdot_2-qdot_1)
+p_2 = qdot_2 + 2*alpha*(mag(q_1+q_2)**2)*(qdot_2-qdot_1)
 
 S_1initial = S_1
 S_2initial = S_2
@@ -248,7 +251,7 @@ def SOQsys(input,t,omega_0,alpha):
         numerator = p_1 + 2*alpha*(mag(q_1+q_2)**2)*(p_1+p_2)
         q_1dot = numerator*(1/denominator)
         #
-        numerator = p_2 + 2*alpha*(mag(q_1+q_2)**2)*(p_1+p_2)
+        numerator = p_2 + 2*alpha*(mag(q_1+q_2)**2)*(p_2+p_1)
         q_2dot = numerator*(1/denominator)
         #
         p_1dot = -q_1+2*alpha*(mag(q_1dot-q_2dot)**2)*(q_1+q_2)
@@ -383,7 +386,7 @@ while i < solsize:
     numerator = p_1i + 2*alpha*(mag(q_1i+q_2i)**2)*(p_1i+p_2i)
     q_1idot = numerator*(1/denominator)
     #
-    numerator = p_2i + 2*alpha*(mag(q_1i+q_2i)**2)*(p_1i+p_2i)
+    numerator = p_2i + 2*alpha*(mag(q_1i+q_2i)**2)*(p_2i+p_1i)
     q_2idot = numerator*(1/denominator)
     #
     S_1val = np.dot(conj(q_1idot),q_1i)
