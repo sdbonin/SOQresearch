@@ -24,7 +24,7 @@ watchthis = 1e-17
 
 arguments = np.array([[omega_0, alpha]])
 
-np.random.seed(1268)
+#np.random.seed(1268)
 
 def quatreal(q):
     """
@@ -60,7 +60,7 @@ def normalize(q):
     quaternion = q[0]
     norm = 1/np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
     #q = norm*q
-    print('norm =', norm)
+    #print('norm =', norm)
     q[0,0] = norm*q[0,0]
     q[0,1] = norm*q[0,1]
     q[0,2] = norm*q[0,2]
@@ -80,7 +80,7 @@ def randq():
     From "Generating a random element of SO(3), Steven M. LaValle"
     """
     u = np.random.random((1,3))
-    print("u =",u)
+    #print("u =",u)
     h = np.zeros((1,4))
     h[0,0] = np.sin(2*math.pi*u[0,1])*np.sqrt(1-u[0,0])
     h[0,1] = np.cos(2*math.pi*u[0,1])*np.sqrt(1-u[0,0])
@@ -111,8 +111,8 @@ def EOM(q_1,q_2,p_1,p_2):
     alpha = 0.001
     qdot_1 = p_1
     qdot_2 = p_2
-    pdot_1 = -q_1 + alpha * (q_1 + q_2)
-    pdot_2 = -q_2 + alpha * (q_2 + q_1)
+    pdot_1 = -q_1 + alpha * (q_2)
+    pdot_2 = -q_2 + alpha * (q_1)
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
 
@@ -129,11 +129,15 @@ def SOQsys(input,t):
     
 """initial conditions"""
 
+S_1 = normalize(quatreal(np.array([[0,1,0,0]])))
+S_2 = normalize(quatreal(np.array([[0,1,1,0]])))
+
 q_1 = quatreal(randq())
 q_2 = quatreal(randq())
 
-S_1 = normalize(quatreal(np.array([[0,1,0,0]])))
-S_2 = normalize(quatreal(np.array([[0,1,1,0]])))
+'''c = normalize(S_1 - S_2)
+q_1 = quatreal(randq())
+q_2 = np.dot(q_1,c)'''
 
 qdot_1 = np.dot(q_1,conj(S_1))
 qdot_2 = np.dot(q_2,conj(S_2))
@@ -163,6 +167,8 @@ repackage initial values into a numpy array for scipy.integrate
 """
 
 initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
+
+print("Initial conditions valid...")
  
 """
 run scipy.integrate ODE solver
@@ -173,6 +179,8 @@ the following is adapted from
 http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html#scipy.integrate.odeint
 """
 
+print("Running ODE solver...")
+
 t = np.linspace(t0,totaltime,totaltime/dt)
 sol = odeint(SOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
 print('np.shape(sol) = ',np.shape(sol))
@@ -181,8 +189,9 @@ solsize = np.int(totaltime/dt)
 print('solsize = ',solsize)
 i = 1
 
-
 """initialize plotable matrices"""
+
+print("Initializing plotable matrices...")
 
 S_1 = np.zeros((totaltime/dt,4))
 S_2 = np.zeros((totaltime/dt,4))
@@ -218,6 +227,8 @@ L_tot[0] = L_tot_initial
 S_1mag[0] = mag(S_1initial)
 S_2mag[0] = mag(S_2initial)
 
+print("Creating plottable matrices...")
+
 while i < solsize:
     q_1 = np.array([sol[i,0:4]])
     p_1 = np.array([sol[i,8:12]])
@@ -235,11 +246,9 @@ while i < solsize:
     qdot_2 = quatreal(np.array([PsAndQs[0,4:8]]))
     #
     S_1val = np.dot(conj(qdot_1),q_1)
-    #
     S_1[i] = S_1val[0]
     #
     S_2val = np.dot(conj(qdot_2),q_2)
-    #
     S_2[i] = S_2val[0]
     #
     Sreal_1 = S_1val[0,0]
@@ -255,13 +264,13 @@ while i < solsize:
     cons_1[i] = np.sqrt((L_1[i]**2) + Sreal_1**2)
     cons_2[i] = np.sqrt((L_2[i]**2) + Sreal_2**2)
     #
-    cons_2[i]
-    #
     S_error[i] = S_1[i] - S_2[0]
     S_erVec[i] = mag(quatreal(np.array([S_error[i]])))
     #
     i = i + 1
     #print(i)
+
+print("Plotting...")
 
 print('S_1[-1,:] =',S_1[-1,:])
 print('S_2[-1,:] =',S_2[-1,:])
@@ -278,14 +287,16 @@ axes.set_xlim([0,diff])
 axes.set_ylim([-1.5*np.max(np.abs(L_tot[:, :])),1.5*np.max(np.abs(L_tot[:, :]))])
 plt.grid()
 
-plt.subplot(222)
+
+'''plt.subplot(222)
 plt.plot(t, L_int[:, 0], label='L_int')
 plt.legend(loc='best')
 plt.xlabel('t')
 axes = plt.gca()
 axes.set_xlim([0,diff])
 axes.set_ylim([-1.5*np.max(np.abs(L_int[:, :])),1.5*np.max(np.abs(L_int[:, :]))])
-plt.grid()
+plt.grid()'''
+
 
 plt.subplot(223)
 plt.plot(t, L_1[:, 0], label='L_1')
@@ -296,6 +307,8 @@ axes.set_xlim([0,diff])
 axes.set_ylim([-1.5*np.max(np.abs(L_1[:, :])),1.5*np.max(np.abs(L_1[:, :]))])
 plt.grid()
 
+
+
 plt.subplot(224)
 plt.plot(t, L_2[:, 0], label='L_2')
 plt.legend(loc='best')
@@ -305,6 +318,8 @@ axes.set_xlim([0,diff])
 axes.set_ylim([-1.5*np.max(np.abs(L_2[:, :])),1.5*np.max(np.abs(L_2[:, :]))])
 plt.grid()
 plt.show()
+
+
 
 
 plt.subplot(221)
@@ -318,6 +333,8 @@ axes = plt.gca()
 axes.set_xlim([0,diff])
 plt.grid()
 
+
+
 plt.subplot(222)
 plt.plot(t, S_erVec[:, 0], label='mag')
 plt.legend(loc='best')
@@ -325,6 +342,7 @@ plt.xlabel('t')
 axes = plt.gca()
 axes.set_xlim([0,diff])
 plt.grid()
+
 
 
 plt.subplot(223)
@@ -340,6 +358,8 @@ axes.set_ylim([-2,2])
 axes.set_xlim([totaltime-diff,totaltime])
 plt.grid()
 
+
+
 plt.subplot(224)
 plt.plot(t, cons_2[:], label='cons_2')
 plt.plot(t, S_2[:, 0], label='S_2r')
@@ -354,6 +374,7 @@ axes.set_xlim([0,diff])
 plt.grid()
 plt.show()
     
+
     
 
 """
