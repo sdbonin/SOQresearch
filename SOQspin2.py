@@ -13,9 +13,9 @@ import math
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = 5000
+totaltime = (math.pi/2)*1000
 
-diff = 5000
+diff = (math.pi/2)*1000
 t0 = 0
 tolerance = .01
 magtol = 1
@@ -129,8 +129,8 @@ def SOQsys(input,t):
     
 """initial conditions"""
 
-S_1 = normalize(quatreal(np.array([[0,1,0,0]])))
-S_2 = normalize(quatreal(np.array([[0,1,1,0]])))
+S_1 = normalize(quatreal(np.array([[0,0.4,0.5,np.sqrt(1-0.4**2-0.5**2)]])))
+S_2 = normalize(quatreal(np.array([[0,-0.7,0.7,np.sqrt(1-0.7**2-0.7**2)]])))
 
 '''print("S_1 = ", S_1)
 print("S_2 = ", S_2)'''
@@ -268,12 +268,12 @@ while i < solsize:
     Sreal_1 = S_1val[0,0]
     Sreal_2 = S_2val[0,0]
     #
-    L_1[i] = 0.5*(mag(qdot_1)**2 + mag(q_1)**2)
-    L_2[i] = 0.5*(mag(qdot_2)**2 + mag(q_2)**2)
+    L_1[i] = 0.5*(mag(qdot_1)**2 - mag(q_1)**2)
+    L_2[i] = 0.5*(mag(qdot_2)**2 - mag(q_2)**2)
     #
     L_int[i] = 0
     #
-    L_tot[i] = L_1[i] - L_2[i]
+    L_tot[i] = L_1[i] + L_2[i]
     #
     cons_1[i] = np.sqrt((L_1[i]**2) + Sreal_1**2)
     cons_2[i] = np.sqrt((L_2[i]**2) + Sreal_2**2)
