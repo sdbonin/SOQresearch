@@ -163,27 +163,9 @@ repackage initial values into a numpy array for scipy.integrate
 """
 
 initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
-    
-"""
-Let me know if the way I'm interpreting how this integrator works is incorrect
-"""
-i = 0
-
-"""
-initialize spin matrices for plotting
-"""
-
-#S_1 = np.dot(conj(qdot_1),q_1)
-#S_2 = np.dot(conj(qdot_2),q_2)
-S_1init=S_1
-S_2init=S_2
-
+ 
 """
 run scipy.integrate ODE solver
-"""
-"""
-this can probably be greatly sped up, and now that the plot function has been moved to SOQplot, 
-this needs to be less hard coded
 """
 
 """
@@ -249,9 +231,6 @@ while i < solsize:
     #
     PsAndQs = np.array([EOM(q_1,q_2,p_1,p_2)])
     #
-    '''print("PsAndQs = ",PsAndQs)
-    print("np.shape(PsAndQs) = ",np.shape(PsAndQs))
-    print("PsAndQs[0,0:4] = ",PsAndQs[0,0:4])'''
     qdot_1 = quatreal(np.array([PsAndQs[0,0:4]]))
     qdot_2 = quatreal(np.array([PsAndQs[0,4:8]]))
     #
@@ -265,14 +244,11 @@ while i < solsize:
     #
     Sreal_1 = S_1val[0,0]
     Sreal_2 = S_2val[0,0]
-    #print('Sreal_1 =',Sreal_1)
     #
     L_1[i] = 0.5*(mag(qdot_1)**2 - mag(q_1)**2)
     L_2[i] = 0.5*(mag(qdot_2)**2 - mag(q_2)**2)
-    #print('L_1 =',L_1)
     #
     L_int[i] = 0
-    #print("L_int[i] = ",L_int[i])
     #
     L_tot[i] = L_1[i] + L_2[i] + L_int[i]
     #
@@ -292,9 +268,6 @@ print('S_2[-1,:] =',S_2[-1,:])
 
 print('S_1[0,:] =',S_1[0,:])
 print('S_2[0,:] =',S_2[0,:])
-
-print('S_1.dtype = ',S_1.dtype)
-print('S_2.dtype = ',S_2.dtype)
 
 plt.subplot(221)
 plt.plot(t, L_tot[:, 0], label='L_tot')
