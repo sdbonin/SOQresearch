@@ -24,7 +24,7 @@ watchthis = 1e-17
 
 arguments = np.array([[omega_0, alpha]])
 
-#np.random.seed(1268)
+np.random.seed(1268)
 
 def quatreal(q):
     """
@@ -61,11 +61,11 @@ def normalize(q):
     norm = 1/np.sqrt((q[0,0]**2)+(q[0,1]**2)+(q[0,2]**2)+(q[0,3]**2))
     #q = norm*q
     #print('norm =', norm)
-    q[0,0] = norm*q[0,0]
+    '''q[0,0] = norm*q[0,0]
     q[0,1] = norm*q[0,1]
     q[0,2] = norm*q[0,2]
-    q[0,3] = norm*q[0,3]
-    normalizedq = q
+    q[0,3] = norm*q[0,3]'''
+    normalizedq = norm*q
     return normalizedq
     
 def mag(q):
@@ -132,12 +132,26 @@ def SOQsys(input,t):
 S_1 = normalize(quatreal(np.array([[0,1,0,0]])))
 S_2 = normalize(quatreal(np.array([[0,1,1,0]])))
 
-q_1 = quatreal(randq())
+'''print("S_1 = ", S_1)
+print("S_2 = ", S_2)'''
+
+'''q_1 = quatreal(randq())
 q_2 = quatreal(randq())
 
-'''c = normalize(S_1 - S_2)
+c = np.dot(conj(q_1),q_2)'''
+
+'''c = normalize(S_1-S_2)
 q_1 = quatreal(randq())
 q_2 = np.dot(q_1,c)'''
+
+c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
+q_1 = quatreal(randq())
+q_2 = np.dot(q_1,c)
+
+'''q_1 = S_1
+q_2 = S_2'''
+
+print("c = ",c)
 
 qdot_1 = np.dot(q_1,conj(S_1))
 qdot_2 = np.dot(q_2,conj(S_2))
@@ -254,12 +268,12 @@ while i < solsize:
     Sreal_1 = S_1val[0,0]
     Sreal_2 = S_2val[0,0]
     #
-    L_1[i] = 0.5*(mag(qdot_1)**2 - mag(q_1)**2)
-    L_2[i] = 0.5*(mag(qdot_2)**2 - mag(q_2)**2)
+    L_1[i] = 0.5*(mag(qdot_1)**2 + mag(q_1)**2)
+    L_2[i] = 0.5*(mag(qdot_2)**2 + mag(q_2)**2)
     #
     L_int[i] = 0
     #
-    L_tot[i] = L_1[i] + L_2[i] + L_int[i]
+    L_tot[i] = L_1[i] - L_2[i]
     #
     cons_1[i] = np.sqrt((L_1[i]**2) + Sreal_1**2)
     cons_2[i] = np.sqrt((L_2[i]**2) + Sreal_2**2)
