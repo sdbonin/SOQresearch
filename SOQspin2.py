@@ -13,9 +13,9 @@ import math
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = (math.pi)*1000
+totaltime = (math.pi/2)*1000
 
-diff = (math.pi)*1000
+diff = (math.pi/2)*1000
 t0 = 0
 tolerance = .01
 magtol = 1
@@ -24,7 +24,7 @@ watchthis = 1e-17
 
 arguments = np.array([[omega_0, alpha]])
 
-np.random.seed(1268)
+#np.random.seed(1268)
 
 def quatreal(q):
     """
@@ -155,17 +155,17 @@ q_2 = quatreal(randq())
 
 c = np.dot(conj(q_1),q_2)'''
 
-'''c = normalize(S_1-S_2)
+'''c = normalize(S_1+S_2)
 q_1 = quatreal(randq())
 q_2 = np.dot(q_1,c)'''
 
-'''c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
-q_1 = quatreal(randq())
-q_2 = np.dot(q_1,c)'''
-
-c = normalize(quatreal(np.array([[0,0,0,1]])))
+c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
 q_1 = quatreal(randq())
 q_2 = np.dot(q_1,c)
+
+'''c = normalize(quatreal(np.array([[0,0,0,1]])))
+q_1 = quatreal(randq())
+q_2 = np.dot(q_1,c)'''
 
 '''q_1 = S_1
 q_2 = S_2'''
@@ -184,8 +184,8 @@ S_2initial = S_2
 Sreal_1_initial = S_1[0,0]
 Sreal_2_initial = S_2[0,0]
 
-L_1_initial = 0.5*(mag(qdot_1)**2 - mag(q_1)**2)
-L_2_initial = 0.5*(mag(qdot_2)**2 - mag(q_2)**2)
+L_1_initial = 0.5*(mag(qdot_1)**2 + mag(q_1)**2)
+L_2_initial = 0.5*(mag(qdot_2)**2 + mag(q_2)**2)
 #
 cons_1_initial = np.sqrt((L_1_initial**2) + Sreal_1_initial**2)
 cons_2_initial = np.sqrt((L_2_initial**2) + Sreal_2_initial**2)
@@ -287,12 +287,12 @@ while i < solsize:
     Sreal_1 = S_1val[0,0]
     Sreal_2 = S_2val[0,0]
     #
-    L_1[i] = 0.5*(mag(qdot_1)**2 - mag(q_1)**2)
-    L_2[i] = 0.5*(mag(qdot_2)**2 - mag(q_2)**2)
+    L_1[i] = 0.5*(mag(qdot_1)**2 + mag(q_1)**2)
+    L_2[i] = 0.5*(mag(qdot_2)**2 + mag(q_2)**2)
     #
     L_int[i] = 0
     #
-    L_tot[i] = L_1[i] + L_2[i]
+    L_tot[i] = L_1[i] - L_2[i]
     #
     cons_1[i] = np.sqrt((L_1[i]**2) + Sreal_1**2)
     cons_2[i] = np.sqrt((L_2[i]**2) + Sreal_2**2)

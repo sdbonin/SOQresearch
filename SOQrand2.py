@@ -13,9 +13,13 @@ import math
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = (math.pi/2)*1000
+totaltime = (math.pi/4)*1000
 
-diff = (math.pi/2)*1000
+diff = (math.pi/4)*1000
+
+'''totaltime = (.4)*1000
+
+diff = (.4)*1000'''
 t0 = 0
 tolerance = .01
 magtol = 1
@@ -107,10 +111,24 @@ def quatdot(q_1,q_2):
 def EOM(q_1,q_2,p_1,p_2):
     """equations of motion"""
     alpha = 0.001
-    qdot_1 = p_1
+    #
+    '''qdot_1 = p_1
     qdot_2 = p_2
     pdot_1 = -q_1 + alpha * (q_2)
-    pdot_2 = -q_2 + alpha * (q_1)
+    pdot_2 = -q_2 + alpha * (q_1)'''
+    #
+    denominator = 1 + 2*alpha
+    #
+    numerator = p_1 + alpha * (p_1 - p_2)
+    qdot_1 = numerator*(1/denominator)
+    #
+    numerator = p_2 + alpha * (p_2 - p_1)
+    qdot_2 = numerator*(1/denominator)
+    #
+    pdot_1 = -q_1 + alpha * (q_1 + q_2)
+    #
+    pdot_2 = -q_2 + alpha * (q_2 + q_1)
+    #
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
 
@@ -127,43 +145,83 @@ def SOQsys(input,t):
 
 n = 0
 
-while n < 10: 
+"""find out which c's go to k-> 0.353"""
+
+"""try other lagrangians"""
+
+"""c changing with time, c(t) = q_1(t)*q_2(t) along with S_1 and S_2"""
+
+while n < 1: 
     """initial conditions"""
 
-    S_1 = normalize(quatreal(np.array([[0,0.4,0.5,np.sqrt(1-0.4**2-0.5**2)]])))
-    S_2 = normalize(quatreal(np.array([[0,-0.7,0.7,np.sqrt(1-0.7**2-0.7**2)]])))
+    S_1 = normalize(quatreal(np.array([[0,1,0,0]])))
+    S_2 = normalize(quatreal(np.array([[0,-1,1,0]])))
 
     '''print("S_1 = ", S_1)
     print("S_2 = ", S_2)'''
 
     '''q_1 = quatreal(randq())
-    q_2 = quatreal(randq())
+    q_2 = quatreal(randq())'''
 
-    c = np.dot(conj(q_1),q_2)'''
+    '''c = np.dot(conj(q_1),q_2)'''
 
-    '''c = normalize(S_1-S_2)
+    c = normalize(S_1-S_2)
     q_1 = quatreal(randq())
-    q_2 = np.dot(q_1,c)'''
+    q_2 = np.dot(q_1,c)
 
     '''c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
     q_1 = quatreal(randq())
     q_2 = np.dot(q_1,c)'''
     
-    c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
+    '''c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
     q_1 = quatreal(randq())
-    q_2 = conj(q_1)
-
+    q_2 = conj(q_1)'''
+    
+    '''c = normalize(quatreal(np.array([[0,1,0,0]])))
+    q_1 = quatreal(randq())
+    q_2 = np.dot(q_1,c)'''
+    
+    
+    '''q_1 = quatreal(randq())
+    q_2 = q_1'''
+    
     '''q_1 = S_1
     q_2 = S_2'''
-
-    print("c = ",c)
+    
+    '''c = np.dot(S_1,conj(S_2))
+    q_1 = quatreal(randq())
+    q_2 = np.dot(q_1,c)'''
+    
+    '''angle = 2*math.pi*np.random.random()  
+    Sdot = S_1-S_2
+    Sdot = np.array([Sdot[0]])
+    Sdot[0,0] = 0
+    print("Sdot = ",Sdot)
+    Sdot = quatreal(Sdot)
+    c = quatreal(np.array([[np.cos(angle),0,0,0]])) + np.sin(angle)*normalize(Sdot)
+    q_1 = quatreal(randq())
+    q_2 = np.dot(q_1,c)'''
+    
+    '''c = quatreal(np.array([[1,0,0,0]]))
+    q_1 = quatreal(randq())
+    q_2 = np.dot(q_1,c)'''
+    
+    '''c = quatreal(np.array([[1,0,0,0]]))
+    q_1 = quatreal(randq())
+    q_2 = np.dot(q_1,c)'''
+    
+    '''c = np.dot(conj(S_2),S_1)
+    q_1 = quatreal(randq())
+    q_2 = np.dot(q_1,c)'''
+    
+    #print("c = ",c)
 
     qdot_1 = np.dot(q_1,conj(S_1))
     qdot_2 = np.dot(q_2,conj(S_2))
 
-    p_1 = qdot_1
-    p_2 = qdot_2
-
+    p_1 = qdot_1 + alpha*(qdot_1 + qdot_2)
+    p_2 = qdot_2 + alpha*(qdot_2 + qdot_1)
+    
     S_1initial = S_1
     S_2initial = S_2
 
@@ -303,6 +361,19 @@ while n < 10:
     #
     qdot_2 = p_2
     #
+    #
+    #
+    PsAndQs = np.array([EOM(q_1,q_2,p_1,p_2)])
+    #
+    qdot_1 = quatreal(np.array([PsAndQs[0,0:4]]))
+    qdot_2 = quatreal(np.array([PsAndQs[0,4:8]]))
+    #
+    pdot_1 = quatreal(np.array([PsAndQs[0,8:12]]))
+    pdot_1 = quatreal(np.array([PsAndQs[0,12:16]]))
+    '''pdot_1 = -q_1 + alpha * (q_1 + q_2)
+    #
+    pdot_2 = -q_2 + alpha * (q_2 + q_1)'''
+    #        
     S_1mat = np.dot(conj(qdot_1),q_1)
     #print('S_1mat =',S_1mat)
     #
