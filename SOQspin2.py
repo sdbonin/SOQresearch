@@ -13,9 +13,9 @@ import math
 omega_0 = 1
 alpha = .001
 dt = .1
-totaltime = (math.pi/2)*1000
+totaltime = (math.pi)*1000
 
-diff = (math.pi/2)*1000
+diff = (math.pi)*1000
 t0 = 0
 tolerance = .01
 magtol = 1
@@ -109,10 +109,25 @@ def quatdot(q_1,q_2):
 def EOM(q_1,q_2,p_1,p_2):
     """equations of motion"""
     alpha = 0.001
-    qdot_1 = p_1
+    #
+    '''qdot_1 = p_1
     qdot_2 = p_2
     pdot_1 = -q_1 + alpha * (q_2)
-    pdot_2 = -q_2 + alpha * (q_1)
+    pdot_2 = -q_2 + alpha * (q_1)'''
+    #
+    denominator1 = 1 + 2*alpha
+    denominator2 = 1 + 2*alpha
+    #
+    numerator = p_1 + alpha * (p_1 - p_2)
+    qdot_1 = numerator*(1/denominator1)
+    #
+    numerator = p_2 + alpha * (p_2 - p_1)
+    qdot_2 = numerator*(1/denominator2)
+    #
+    pdot_1 = -q_1 + alpha * (q_1 + q_2)
+    #
+    pdot_2 = -q_2 + alpha * (q_2 + q_1)
+    #
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
 
@@ -129,8 +144,8 @@ def SOQsys(input,t):
     
 """initial conditions"""
 
-S_1 = normalize(quatreal(np.array([[0,0.4,0.5,np.sqrt(1-0.4**2-0.5**2)]])))
-S_2 = normalize(quatreal(np.array([[0,-0.7,0.7,np.sqrt(1-0.7**2-0.7**2)]])))
+S_1 = normalize(quatreal(np.array([[0,1,0,0]])))
+S_2 = normalize(quatreal(np.array([[0,-1,1,0]])))
 
 '''print("S_1 = ", S_1)
 print("S_2 = ", S_2)'''
@@ -144,7 +159,11 @@ c = np.dot(conj(q_1),q_2)'''
 q_1 = quatreal(randq())
 q_2 = np.dot(q_1,c)'''
 
-c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
+'''c = np.dot(normalize(S_1+S_2),quatreal(randImS()))
+q_1 = quatreal(randq())
+q_2 = np.dot(q_1,c)'''
+
+c = normalize(quatreal(np.array([[0,0,0,1]])))
 q_1 = quatreal(randq())
 q_2 = np.dot(q_1,c)
 
@@ -156,8 +175,8 @@ print("c = ",c)
 qdot_1 = np.dot(q_1,conj(S_1))
 qdot_2 = np.dot(q_2,conj(S_2))
 
-p_1 = qdot_1
-p_2 = qdot_2
+p_1 = qdot_1 + alpha*(qdot_1 + qdot_2)
+p_2 = qdot_2 + alpha*(qdot_2 + qdot_1)
 
 S_1initial = S_1
 S_2initial = S_2
