@@ -87,57 +87,6 @@ def quatdot(q_1,q_2):
     dot = q_1[0,0]*q_2[0,0] + q_1[0,1]*q_2[0,1] + q_1[0,2]*q_2[0,2] + q_1[0,3]*q_2[0,3]
     return dot
 
-def rot1EOM(q_1,q_2,p_1,p_2):
-    """qubit 1 rotation equations of motion"""
-    alpha = 0.001
-    #
-    #b = 0.01*normalize(quatreal(np.array([[0,0,1,0]])))
-    #
-    qdot_1 = p_1 - np.dot(q_1,b)
-    qdot_2 = quatreal(np.array([[0,0,0,0]]))
-    #
-    pdot_1 = -q_1 - np.dot(p_1,b)
-    pdot_2 = quatreal(np.array([[0,0,0,0]]))
-    #
-    results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
-    return results
-
-def rot2EOM(q_1,q_2,p_1,p_2):
-    """rotation equations of motion for qubit 2"""
-    alpha = 0.001
-    #
-    #b = 0.01*normalize(quatreal(np.array([[0,0,1,0]])))
-    #
-    qdot_1 = quatreal(np.array([[0,0,0,0]]))
-    qdot_2 = p_2 - np.dot(q_2,b)
-    #
-    pdot_1 = quatreal(np.array([[0,0,0,0]]))
-    pdot_2 = -q_2 - np.dot(p_2,b)
-    #
-    results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
-    return results
-
-def rot1SOQsys(input,t):
-    """qubit 1 function for integrator"""
-    q_1 = quatreal(np.array([input[0:4]]))
-    q_2 = quatreal(np.array([input[4:8]]))
-    p_1 = quatreal(np.array([input[8:12]]))
-    p_2 = quatreal(np.array([input[12:16]]))
-    #
-    output = rot1EOM(q_1,q_2,p_1,p_2)
-    #print('time = ',time)
-    return output
-
-def rot2SOQsys(input,t):
-    """function for integrator"""
-    q_1 = quatreal(np.array([input[0:4]]))
-    q_2 = quatreal(np.array([input[4:8]]))
-    p_1 = quatreal(np.array([input[8:12]]))
-    p_2 = quatreal(np.array([input[12:16]]))
-    #
-    output = rot2EOM(q_1,q_2,p_1,p_2)
-    #print('time = ',time)
-    return output
 
 def rswapEOM(q_1,q_2,p_1,p_2):
     """root SWAP equations of motion"""
@@ -149,15 +98,15 @@ def rswapEOM(q_1,q_2,p_1,p_2):
     pdot_1 = (-1+(alpha**2))*q_1 + alpha * qdot_2
     pdot_2 = (-1+(alpha**2))*q_2 - alpha * qdot_1'''
     #
-    qdot_1 = p_1
-    qdot_2 = p_2
-    pdot_1 = -q_1 + alpha * (q_2+q_1)
-    pdot_2 = -q_2 + alpha * (q_1+q_2)
-    #
     '''qdot_1 = p_1
     qdot_2 = p_2
+    pdot_1 = -q_1 + alpha * (q_2+q_1)
+    pdot_2 = -q_2 + alpha * (q_1+q_2)'''
+    #
+    qdot_1 = p_1
+    qdot_2 = p_2
     pdot_1 = -q_1 + alpha * (q_2)
-    pdot_2 = -q_2 + alpha * (q_1)'''
+    pdot_2 = -q_2 + alpha * (q_1)
     #
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
@@ -185,7 +134,7 @@ S_2 = normalize(quatreal(np.array([[0,0,0,-1]])))
 """initial q's"""
 
 q_1 = quatreal(randq())
-q_2 = q_1
+q_2 = quatreal(randq())
 
 """initial p's"""
 
@@ -202,9 +151,9 @@ Sreal_2_initial = S_2[0,0]
 
 """here are our initial magnetic fields"""
 
-bRY2 = 0.001*normalize(quatreal(np.array([[0,0,1,0]])))
+bRY2 = -0.001*normalize(quatreal(np.array([[0,0,1,0]])))
 bZ1 = 0.001*normalize(quatreal(np.array([[0,0,0,1]])))
-bnegRZ2 = -0.001*normalize(quatreal(np.array([[0,0,0,1]])))
+bnegRZ2 = 0.001*normalize(quatreal(np.array([[0,0,0,1]])))
 bnegRZ1 = 0.001*normalize(quatreal(np.array([[0,0,0,1]])))
 bnegRY2 = 0.001*normalize(quatreal(np.array([[0,0,1,0]])))
 
@@ -223,118 +172,25 @@ http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html#
 """
 
 print("Running ODE solver...")
-
-'''############################## 1st gate'''
-initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
-b = bRY2
-
-print("RY, qubit #2...")
-
-time = 1000*math.pi/4
-
-print("time = ",time)
-
-t = np.linspace(t0,time,time/dt)
-sol = odeint(rot2SOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(sol))
-
-totaltime = totaltime+time
 extragates = 0
-'''############################## 2nd gate'''
+totaltime = 0
+initialvalues = np.append(q_1[0],[q_2[0],p_1[0],p_2[0]])
+
+
+'''##############################'''
 print("root SWAP...")
-time = 1000*math.pi/2
+time = 1000*math.pi
 
 print("time = ",time)
 
-initialvalues = sol[-1,:]
-
 t = np.linspace(t0,time,time/dt)
-solution = odeint(rswapSOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(solution))
+sol = odeint(rswapSOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
+print('np.shape(sol) = ',np.shape(sol))
 
 totaltime = totaltime+time
-sol = np.append(sol,solution,axis = 0)
-extragates = extragates + 1
-'''############################## 3rd gate'''
-print("X, qubit #1...")
-time = 1000*math.pi/4
+extragates = extragates
+'''##############################'''
 
-print("time = ",time)
-
-initialvalues = sol[-1,:]
-b = bZ1
-
-t = np.linspace(t0,time,time/dt)
-solution = odeint(rot1SOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(solution))
-
-totaltime = totaltime+time
-sol = np.append(sol,solution,axis = 0)
-extragates = extragates+1
-'''############################## 4th gate'''
-print("root SWAP...")
-time = 1000*math.pi/2
-
-print("time = ",time)
-
-initialvalues = sol[-1,:]
-
-t = np.linspace(t0,time,time/dt)
-solution = odeint(rswapSOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(solution))
-
-totaltime = totaltime+time
-sol = np.append(sol,solution,axis = 0)
-extragates = extragates+1
-'''############################## 5th gate'''
-print("-RZ, qubit #2...")
-time = 1000*math.pi/4
-
-print("time = ",time)
-
-initialvalues = sol[-1,:]
-b = bnegRZ2
-
-t = np.linspace(t0,time,time/dt)
-solution = odeint(rot2SOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(solution))
-
-totaltime = totaltime+time
-sol = np.append(sol,solution,axis = 0)
-extragates = extragates+1
-'''############################## 6th gate'''
-print("-RZ, qubit #1...")
-time = 1000*math.pi/4
-
-print("time = ",time)
-
-initialvalues = sol[-1,:]
-b = bnegRZ1
-
-t = np.linspace(t0,time,time/dt)
-solution = odeint(rot1SOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(solution))
-
-totaltime = totaltime+time
-sol = np.append(sol,solution,axis = 0)
-extragates = extragates+1
-'''############################## 7th gate'''
-print("-RY, qubit #2...")
-time = 1000*math.pi/4
-
-print("time = ",time)
-
-initialvalues = sol[-1,:]
-b = bnegRY2
-
-t = np.linspace(t0,time,time/dt)
-solution = odeint(rot2SOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(solution))
-
-totaltime = totaltime+time
-sol = np.append(sol,solution,axis = 0)
-
-extragates = extragates+1
 
 diff = totaltime
 stepnumber = totaltime/dt - extragates
@@ -438,7 +294,6 @@ plt.plot(t, S_1[:, 1], label='S_1x')
 plt.plot(t, S_1[:, 2], label='S_1y')
 plt.plot(t, S_1[:, 3], label='S_1z')
 plt.plot(t, CONSTANT[:], label='all 8')
-
 plt.legend(loc='best')
 plt.xlabel('t')
 axes = plt.gca()
