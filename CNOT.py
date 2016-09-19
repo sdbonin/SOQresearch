@@ -91,13 +91,11 @@ def rot1EOM(q_1,q_2,p_1,p_2):
     """qubit 1 rotation equations of motion"""
     alpha = 0.001
     #
-    #b = 0.01*normalize(quatreal(np.array([[0,0,1,0]])))
-    #
     qdot_1 = p_1 - np.dot(q_1,b)
-    qdot_2 = quatreal(np.array([[0,0,0,0]]))
+    qdot_2 = p_2
     #
     pdot_1 = -q_1 - np.dot(p_1,b)
-    pdot_2 = quatreal(np.array([[0,0,0,0]]))
+    pdot_2 = -q_2
     #
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
@@ -106,12 +104,10 @@ def rot2EOM(q_1,q_2,p_1,p_2):
     """rotation equations of motion for qubit 2"""
     alpha = 0.001
     #
-    #b = 0.01*normalize(quatreal(np.array([[0,0,1,0]])))
-    #
-    qdot_1 = quatreal(np.array([[0,0,0,0]]))
+    qdot_1 = p_1
     qdot_2 = p_2 - np.dot(q_2,b)
     #
-    pdot_1 = quatreal(np.array([[0,0,0,0]]))
+    pdot_1 = -q_1
     pdot_2 = -q_2 - np.dot(p_2,b)
     #
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
@@ -185,7 +181,17 @@ S_2 = normalize(quatreal(np.array([[0,0,0,-1]])))
 """initial q's"""
 
 q_1 = quatreal(randq())
-q_2 = q_1
+q_2 = quatreal(randq())
+
+print("q_1 = ",q_1)
+print("q_2 = ",q_2)
+
+dot1 = np.dot(conj(q_1),q_2)
+realpart = dot1[0,0]
+print("realpart = ",realpart)
+
+'''q_1 = quatreal(randq())
+q_2 = q_1'''
 
 """initial p's"""
 
@@ -202,9 +208,9 @@ Sreal_2_initial = S_2[0,0]
 
 """here are our initial magnetic fields"""
 
-bRY2 = 0.001*normalize(quatreal(np.array([[0,0,1,0]])))
-bZ1 = 0.001*normalize(quatreal(np.array([[0,0,0,1]])))
-bnegRZ2 = -0.001*normalize(quatreal(np.array([[0,0,0,1]])))
+bRY2 = -0.001*normalize(quatreal(np.array([[0,0,1,0]])))
+bZ1 = -0.001*normalize(quatreal(np.array([[0,0,0,1]])))
+bnegRZ2 = 0.001*normalize(quatreal(np.array([[0,0,0,1]])))
 bnegRZ1 = 0.001*normalize(quatreal(np.array([[0,0,0,1]])))
 bnegRY2 = 0.001*normalize(quatreal(np.array([[0,0,1,0]])))
 
@@ -257,7 +263,7 @@ sol = np.append(sol,solution,axis = 0)
 extragates = extragates + 1
 '''############################## 3rd gate'''
 print("X, qubit #1...")
-time = 1000*math.pi/4
+time = 1000*math.pi/2
 
 print("time = ",time)
 
@@ -363,6 +369,7 @@ S_2mag = np.zeros((stepnumber,1))
 L_1 = np.zeros((stepnumber,1))
 L_2 = np.zeros((stepnumber,1))
 CONSTANT = np.zeros((stepnumber,1))
+deltaH = np.zeros((stepnumber,1))
 
 print("Inputing initial values for plottable matrices...")
 
@@ -379,10 +386,11 @@ S_2mag[0] = mag(S_2initial)
 L_1[0] = 0
 L_2[0] = 0
 CONSTANT[0] = 0
+deltaH[0] = 0
 
 print("Creating plottable matrices...")
 
-while i < solsize-1:
+while i < solsize:
     q_1 = np.array([sol[i,0:4]])
     p_1 = np.array([sol[i,8:12]])
     q_1 = quatreal(q_1)
@@ -410,17 +418,27 @@ while i < solsize-1:
     L_1[i] = 0.5*(mag(qdot_1)**2 - mag(q_1)**2)
     L_2[i] = 0.5*(mag(qdot_2)**2 - mag(q_2)**2)
     #
-    cons_1[i] = np.sqrt((L_1[i]**2) + Sreal_1**2)
+    '''cons_1[i] = np.sqrt((L_1[i]**2) + Sreal_1**2)
     cons_2[i] = np.sqrt((L_2[i]**2) + Sreal_2**2)
+    #
     mag1 = cons_1[i]**2 + S_1val[0,1]**2 + S_1val[0,2]**2 + S_1val[0,3]**2
     mag2 = cons_2[i]**2 + S_2val[0,1]**2 + S_2val[0,2]**2 + S_2val[0,3]**2
-    CONSTANT[i] = mag1 + mag2
+    #
+    CONSTANT[i] = mag1 + mag2 - alpha*np.abs(mag(q_1+q_2)**2)'''
+    #
+    """CONSTANT = L_1^2 + L_2^2 + mag(p_1starq_1)^2 + mag(p_2starq_2)^2"""
+    #
+    deltaH[i] = 0.5*(mag(qdot_1)**2 + mag(q_1)**2 - mag(qdot_2)**2 - mag(q_2)**2)
+    #
+    """plot H here"""
     #
     S_error[i] = S_1[i] - S_2[0]
     S_erVec[i] = mag(quatreal(np.array([S_error[i]])))
     #
     i = i + 1
     #print(i)
+
+print("deltaH[-1] = ", deltaH[-1])
 
 print("Plotting...")
 
@@ -437,7 +455,8 @@ plt.plot(t, cons_1[:], label='L_1')
 plt.plot(t, S_1[:, 1], label='S_1x')
 plt.plot(t, S_1[:, 2], label='S_1y')
 plt.plot(t, S_1[:, 3], label='S_1z')
-plt.plot(t, CONSTANT[:], label='all 8')
+plt.plot(t, deltaH[:], label='deltaH')
+plt.plot(t,CONSTANT[:],label = 'energy')
 
 plt.legend(loc='best')
 plt.xlabel('t')

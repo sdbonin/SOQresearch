@@ -98,15 +98,15 @@ def rswapEOM(q_1,q_2,p_1,p_2):
     pdot_1 = (-1+(alpha**2))*q_1 + alpha * qdot_2
     pdot_2 = (-1+(alpha**2))*q_2 - alpha * qdot_1'''
     #
-    '''qdot_1 = p_1
-    qdot_2 = p_2
-    pdot_1 = -q_1 + alpha * (q_2+q_1)
-    pdot_2 = -q_2 + alpha * (q_1+q_2)'''
-    #
     qdot_1 = p_1
     qdot_2 = p_2
+    pdot_1 = -q_1 + alpha * (q_2+q_1)
+    pdot_2 = -q_2 + alpha * (q_1+q_2)
+    #
+    '''qdot_1 = p_1
+    qdot_2 = p_2
     pdot_1 = -q_1 + alpha * (q_2)
-    pdot_2 = -q_2 + alpha * (q_1)
+    pdot_2 = -q_2 + alpha * (q_1)'''
     #
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
@@ -189,6 +189,7 @@ print('np.shape(sol) = ',np.shape(sol))
 
 totaltime = totaltime+time
 extragates = extragates
+
 '''##############################'''
 
 
