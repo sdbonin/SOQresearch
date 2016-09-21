@@ -113,6 +113,19 @@ def rot2EOM(q_1,q_2,p_1,p_2):
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
 
+def testEOM(q_1,q_2,p_1,p_2):
+    """rotation equations of motion for qubit 2"""
+    alpha = 0.001
+    #
+    qdot_1 = p_1 - np.dot(q_1,b)
+    qdot_2 = p_2 - np.dot(q_2,b)
+    #
+    pdot_1 = -q_1 - np.dot(p_1,b)
+    pdot_2 = -q_2 - np.dot(p_2,b)
+    #
+    results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
+    return results
+
 def rot1SOQsys(input,t):
     """qubit 1 function for integrator"""
     q_1 = quatreal(np.array([input[0:4]]))
@@ -158,6 +171,29 @@ def rswapEOM(q_1,q_2,p_1,p_2):
     results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
     return results
 
+def NEGrswapEOM(q_1,q_2,p_1,p_2):
+    """root SWAP equations of motion"""
+    alpha = 0.001
+    #
+    '''qdot_1 = p_1 + alpha*q_2
+    qdot_2 = p_2 - alpha*q_1
+    #
+    pdot_1 = (-1+(alpha**2))*q_1 + alpha * qdot_2
+    pdot_2 = (-1+(alpha**2))*q_2 - alpha * qdot_1'''
+    #
+    qdot_1 = p_1
+    qdot_2 = p_2
+    pdot_1 = (-q_1 + alpha * (q_2+q_1))
+    pdot_2 = (-q_2 + alpha * (q_1+q_2))
+    #
+    '''qdot_1 = p_1
+    qdot_2 = p_2
+    pdot_1 = -q_1 + alpha * (q_2)
+    pdot_2 = -q_2 + alpha * (q_1)'''
+    #
+    results = np.append(qdot_1[0],[qdot_2[0],pdot_1[0],pdot_2[0]])
+    return results
+
 def rswapSOQsys(input,t):
     """root SWAP function for integrator"""
     q_1 = quatreal(np.array([input[0:4]]))
@@ -166,6 +202,28 @@ def rswapSOQsys(input,t):
     p_2 = quatreal(np.array([input[12:16]]))
     #
     output = rswapEOM(q_1,q_2,p_1,p_2)
+    #print('time = ',time)
+    return output
+
+def NEGrswapSOQsys(input,t):
+    """root SWAP function for integrator"""
+    q_1 = quatreal(np.array([input[0:4]]))
+    q_2 = quatreal(np.array([input[4:8]]))
+    p_1 = quatreal(np.array([input[8:12]]))
+    p_2 = quatreal(np.array([input[12:16]]))
+    #
+    output = NEGrswapEOM(q_1,q_2,p_1,p_2)
+    #print('time = ',time)
+    return output
+
+def testSOQsys(input,t):
+    """root SWAP function for integrator"""
+    q_1 = quatreal(np.array([input[0:4]]))
+    q_2 = quatreal(np.array([input[4:8]]))
+    p_1 = quatreal(np.array([input[8:12]]))
+    p_2 = quatreal(np.array([input[12:16]]))
+    #
+    output = testEOM(q_1,q_2,p_1,p_2)
     #print('time = ',time)
     return output
 
@@ -247,16 +305,16 @@ print('np.shape(solution) = ',np.shape(sol))
 totaltime = totaltime+time
 extragates = 0
 '''############################## 2nd gate'''
-print("root SWAP...")
-time = 1000*math.pi/2
+print("root SWAP 1...")
+
+time = 1000*math.pi
 
 print("time = ",time)
 
-initialvalues = sol[-1,:]
-
 t = np.linspace(t0,time,time/dt)
-solution = odeint(rswapSOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
-print('np.shape(solution) = ',np.shape(solution))
+sol = odeint(rswapSOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
+print('np.shape(sol) = ',np.shape(sol))
+
 
 totaltime = totaltime+time
 sol = np.append(sol,solution,axis = 0)
@@ -278,7 +336,7 @@ totaltime = totaltime+time
 sol = np.append(sol,solution,axis = 0)
 extragates = extragates+1
 '''############################## 4th gate'''
-print("root SWAP...")
+print("root SWAP 2...")
 time = 1000*math.pi/2
 
 print("time = ",time)
@@ -309,6 +367,21 @@ totaltime = totaltime+time
 sol = np.append(sol,solution,axis = 0)
 extragates = extragates+1
 '''############################## 6th gate'''
+'''print("-RZ,-RY qubit #1 and #2...")
+time = 1000*math.pi/4
+
+print("time = ",time)
+
+initialvalues = sol[-1,:]
+b = bnegRZ1
+
+t = np.linspace(t0,time,time/dt)
+solution = odeint(testSOQsys,initialvalues,t,rtol=1e-10,atol=1e-10)
+print('np.shape(solution) = ',np.shape(solution))
+
+totaltime = totaltime+time
+sol = np.append(sol,solution,axis = 0)
+extragates = extragates+1'''
 print("-RZ, qubit #1...")
 time = 1000*math.pi/4
 
@@ -324,7 +397,7 @@ print('np.shape(solution) = ',np.shape(solution))
 totaltime = totaltime+time
 sol = np.append(sol,solution,axis = 0)
 extragates = extragates+1
-'''############################## 7th gate'''
+############################## 7th gate
 print("-RY, qubit #2...")
 time = 1000*math.pi/4
 
